@@ -1,16 +1,57 @@
-# React + Vite
+# NovaMarket — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend del MVP de NovaMarket, un e-commerce. Esta aplicación consume la API del backend (carpeta `/backend` del monorepo).
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Herramienta      | Versión |
+| ---------------- | ------- |
+| React            | 18.3    |
+| Vite             | 8.3     |
+| Tailwind CSS     | 3.4     |
+| React Router DOM | 6.30    |
+| Axios            | 1.20    |
+| lucide-react     | 1.47    |
+| ESLint           | 10      |
+| Prettier         | 3.9     |
 
-## React Compiler
+Lenguaje: JavaScript (sin TypeScript). Estado global: Context API.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Cómo correrlo
 
-## Expanding the ESLint configuration
+Requisitos: Node.js 20.19+ y npm.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+La app queda disponible en `http://localhost:5173`.
+
+Otros scripts:
+
+- `npm run build`: genera el build de producción en `dist/`.
+- `npm run preview`: sirve el build localmente.
+- `npm run lint`: corre ESLint.
+- `npm run format`: formatea el código con Prettier.
+
+## Variables de entorno
+
+| Variable       | Descripción        | Ejemplo                     |
+| -------------- | ------------------ | --------------------------- |
+| `VITE_API_URL` | URL base de la API | `http://localhost:3000/api` |
+
+## Estructura de carpetas
+
+```
+src/
+├── assets/      # Imágenes, íconos y archivos estáticos
+├── components/  # Componentes reutilizables de UI
+├── context/     # Contextos globales (Context API)
+├── hooks/       # Custom hooks
+├── pages/       # Una vista por ruta (Home, Products, Cart, etc.)
+├── routes/      # Definición de rutas (AppRouter)
+└── services/    # Cliente HTTP (Axios) y llamadas a la API
+```
