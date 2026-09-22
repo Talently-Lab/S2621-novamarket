@@ -1,0 +1,4 @@
+{
+  "frontend/**/*.{js,jsx,css,json,md,html}": "npm --prefix frontend exec prettier -- --write",
+  "frontend/**/*.{js,jsx}": "npm --prefix frontend exec eslint -- --fix"
+}
