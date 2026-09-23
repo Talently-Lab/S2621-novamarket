@@ -9,8 +9,8 @@ Monorepo: `/frontend` (React + Vite + Tailwind) y `/backend`.
 Gates de calidad para mantener el repo limpio y evitar ida y vuelta en los PRs:
 
 - **Pre-commit** (Husky + lint-staged): formatea y lintea solo los archivos que estás por commitear.
-- **Pre-push** (Husky): corre `lint` + `build` del frontend antes de subir.
-- **CI** (GitHub Actions): en cada PR a `develop`/`main` corre `lint`, `build` y `format:check`.
+- **Pre-push** (Husky): corre `format:check` + `lint` + `build` del frontend antes de subir, solo si el push toca `frontend/`.
+- **CI** (GitHub Actions): en cada PR a `develop`/`main` corre `format:check`, `lint` y `build`.
 
 ### Instalación
 
@@ -19,4 +19,4 @@ npm install                    # raíz: instala Husky + lint-staged y activa los
 cd frontend && npm install     # dependencias del frontend
 ```
 
-Requiere Node 20.19 o superior (ver `.nvmrc`).
+Requiere Node 22 o superior (ver `.nvmrc`).
