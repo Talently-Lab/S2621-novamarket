@@ -19,4 +19,4 @@ npm install                    # raíz: instala Husky + lint-staged y activa los
 cd frontend && npm install     # dependencias del frontend
 ```
 
-Requiere Node 22 o superior (ver `.nvmrc`).
+Requiere Node 20.19 o superior (ver `.nvmrc`).
