@@ -9,7 +9,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   fi
 
   if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
-    base="$(git merge-base "$remote_ref" "$local_sha" 2>/dev/null || true)"
+    base="$(git merge-base "$1/develop" "$local_sha" 2>/dev/null || true)"
     if [ -z "$base" ]; then
       run_gates=1
       break
