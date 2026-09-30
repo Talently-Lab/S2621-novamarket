@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import mongoose from 'mongoose';
 import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
@@ -20,6 +21,21 @@ app.get("/api/health", (req, res) => {
     status: "ok",
     message: "NovaMarket API funcionando",
   });
+});
+
+app.get('/api/ready', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+
+  try {
+    if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
+      return res.status(503).json({ status: 'error', database: 'unavailable' });
+    }
+
+    await mongoose.connection.db.admin().ping({ timeoutMS: 3000 });
+    return res.status(200).json({ status: 'ok', database: 'connected' });
+  } catch {
+    return res.status(503).json({ status: 'error', database: 'unavailable' });
+  }
 });
 
 export default app;

@@ -6,6 +6,39 @@ Este directorio contiene la implementación del Backend de NovaMarket, encargado
 
 > **Estado:** En desarrollo.
 
+## Smoke test aislado en Railway
+
+La rama temporal `back/infra-railway-smoke`, derivada de `BACK-001-S2`,
+se despliega exclusivamente en `deploy-test`. No cambia la estrategia
+`develop` (integración/QA) y `main` (producción).
+
+- Root directory del servicio: `/backend`; Dockerfile: `Dockerfile`.
+- Imagen Node 20 fijada por digest; dependencias instaladas con
+  `npm ci --omit=dev`; proceso sin privilegios con `npm start`.
+- `PORT` lo suministra Railway; no se define un puerto fijo en la imagen.
+- MongoDB se aprovisiona con el template `mongo` de Railway, volumen
+  `/data/db` y red privada, sin dominio ni proxy TCP público.
+- `MONGODB_URI` referencia la variable `MONGO_URL` del servicio `MongoDB`
+  desde Railway. Las credenciales no se copian al repositorio.
+- `GET /api/health`: liveness HTTP, sin consultar la base de datos.
+- `GET /api/ready`: ping mediante la conexión existente de Mongoose,
+  con límite de 3 segundos. Responde `200` con
+  `{"status":"ok","database":"connected"}` o `503` con
+  `{"status":"error","database":"unavailable"}`. No escribe documentos.
+- Healthcheck de Railway: `/api/ready`, timeout de arranque de 120 segundos.
+
+El arranque conserva el comportamiento existente: espera a MongoDB antes
+de escuchar HTTP y termina si la conexión inicial falla. Una vez iniciado,
+el handler de liveness no depende de MongoDB.
+
+Para construir localmente desde la raíz: `docker build -t novamarket-backend:smoke backend`.
+Un build correcto no demuestra conectividad con MongoDB: esa comprobación
+requiere el deployment y la respuesta HTTP de `/api/ready`.
+
+La referencia histórica a Atlas más abajo describe el desarrollo del equipo;
+este smoke test utiliza exclusivamente MongoDB dentro de Railway. No incluye
+seeds ni pruebas de autenticación o negocio.
+
 ---
 
 ## Tecnologías
