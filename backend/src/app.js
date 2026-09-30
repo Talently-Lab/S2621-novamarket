@@ -20,6 +20,7 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
     message: "NovaMarket API funcionando",
+    smokeTestVersion: '2',
   });
 });
 
