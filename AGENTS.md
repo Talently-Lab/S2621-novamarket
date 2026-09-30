@@ -51,6 +51,7 @@ Not every PR maps 1:1 to a card (some map to none, some to several). The token's
 - PRs target **`develop`**, not `main`. Squash-merge on completion.
 - Rebase onto `origin/develop` before opening a PR; resolve conflicts there, never drag in upstream commits.
 - After rebase, `git push --force-with-lease` (never `--force`).
+- PR titles and descriptions are written in **Spanish**; commit messages stay conventional.
 
 ## 5. Quality gates (do not bypass)
 
