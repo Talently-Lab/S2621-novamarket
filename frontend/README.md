@@ -23,7 +23,6 @@ Requisitos: Node.js 20.19+ y npm.
 
 ```bash
 cd frontend
-cp .env.example .env
 npm install
 npm run dev
 ```
@@ -39,9 +38,39 @@ Otros scripts:
 
 ## Variables de entorno
 
-| Variable       | Descripción        | Ejemplo                     |
-| -------------- | ------------------ | --------------------------- |
-| `VITE_API_URL` | URL base de la API | `http://localhost:3000/api` |
+React no requiere variables de entorno para conectarse a la API. Axios utiliza
+`/api` en la misma origin y sus consumidores escriben rutas sin repetir ese prefijo.
+Durante `npm run dev`, Vite dirige `/api` a `http://localhost:3000`, conservando
+la ruta completa. El Backend local debe estar ejecutándose en ese puerto.
+
+## Contenedor y smoke test en Railway
+
+El Dockerfile utiliza Node 20 y `npm ci` para generar `dist/`; la imagen final
+contiene Nginx oficial y los archivos estáticos, sin Node ni servidor Vite.
+Ambas imágenes están fijadas por digest.
+
+El servicio Frontend en `deploy-test` utiliza la rama `back/infra-railway-smoke`,
+root directory `/frontend`, `Dockerfile` y watch pattern `/frontend/**`.
+El healthcheck es `/healthz`. Esta configuración no modifica producción.
+
+Variables exclusivas del runtime de Nginx, no del código React ni de su build:
+
+- `PORT`: puerto suministrado por Railway.
+- `BACKEND_URL`: origin HTTP privada del Backend, sin ruta ni slash final;
+  se configura en Railway mediante una referencia al private domain del servicio
+  Backend y el puerto verificado. No se configura en `.env` del Frontend.
+
+El entrypoint oficial procesa `nginx.conf.template` con `envsubst` al arrancar.
+El filtro limita la sustitución a estas dos variables y conserva variables de
+Nginx como `$uri` y `$host`. `/api/` se proxifica sin reescribir el prefijo;
+las rutas de la SPA, por ejemplo `/products`, usan fallback a `/index.html`.
+El hostname privado se resuelve al iniciar Nginx; si cambia la dirección del
+Backend, se debe reiniciar el Frontend para resolverla de nuevo.
+
+Para construir desde la raíz: `docker build -t novamarket-frontend:smoke frontend`.
+Para ejecutar la imagen, proporcionar `PORT` y `BACKEND_URL` en runtime.
+Verificar `/healthz`, `/`, `/products`, `/api/health` y `/api/ready` desde el
+dominio público del Frontend. No hace falta agregar su dominio al CORS del Backend.
 
 ## Estructura de carpetas
 
@@ -211,7 +240,7 @@ Hooks de datos previstos: `useProducts({ page, limit, search, category })` (Home
 
 La capa de servicios sigue el **Contrato API v0.2** publicado por Back: endpoints, accesos, respuestas y códigos de error salen de ahí. Toda la comunicación con la API pasa por `services/`; páginas y componentes nunca importan `axios` directamente.
 
-- **Instancia única:** `services/api.js` (ya existe) crea la instancia con `baseURL: import.meta.env.VITE_API_URL`. En local la API corre en el puerto 3000 (`http://localhost:3000/api`) y Vite en el 5173.
+- **Instancia única:** `services/api.js` crea la instancia con `baseURL: '/api'`. En local, el proxy de Vite conecta con la API en el puerto 3000; en el despliegue, Nginx conecta por red privada. El navegador utiliza siempre la misma origin del Frontend.
 - **Token:** un interceptor de request agrega `Authorization: Bearer <token>` cuando hay token guardado, que es lo que piden los endpoints protegidos.
 - **401:** como no hay refresh token, un interceptor de response limpia la sesión (token y `user`) ante cualquier 401 y redirige a `/login`. Para eso `api.js` expone `setUnauthorizedHandler`, donde `AuthProvider` registra la limpieza; así el contexto se actualiza sin recargar la página. Excepción: con credenciales inválidas, `POST /api/auth/login` responde 401 con un mensaje genérico (`INVALID_CREDENTIALS`); ese 401 no redirige y el mensaje se muestra en el formulario.
 - **Errores:** el mismo interceptor normaliza todos los errores con `getApiError` (en `api.js`) antes de rechazar la promesa, así las vistas siempre reciben `{ code, message, fields }`.
@@ -230,7 +259,7 @@ Cómo llega a la UI:
 - `fields` → error de cada `Input` según el nombre del campo, por ejemplo `<Input name="email" error={fieldErrors.email} />` ante un `VALIDATION_ERROR`. El error de un campo se borra cuando el usuario lo modifica. `fields` es opcional y su confirmación está pendiente (`BCK-API-01`): si no viene, el formulario muestra solo `message`.
 - `code` → no se muestra. Los códigos del contrato son estables y en mayúsculas (`INVALID_CREDENTIALS`, `VALIDATION_ERROR`, `PRODUCT_NOT_FOUND`, `INSUFFICIENT_STOCK`, entre otros), así que la UI decide por `code` y nunca comparando el texto de `message`.
 
-Endpoints del contrato. En el código se escriben sin `/api`, porque `VITE_API_URL` ya lo incluye (por ejemplo, `api.get('/products')`):
+Endpoints del contrato. En el código se escriben sin `/api`, porque la instancia Axios ya incluye ese prefijo (por ejemplo, `api.get('/products')`):
 
 | Función                                                         | Endpoint                                       | Acceso                                            | Contrato v0.2                                                                                         |
 | --------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
