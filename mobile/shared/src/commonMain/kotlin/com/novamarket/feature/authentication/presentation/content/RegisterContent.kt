@@ -19,7 +19,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,11 +37,13 @@ import com.novamarket.feature.authentication.presentation.components.InfoRegiste
 import com.novamarket.feature.authentication.presentation.components.LastNameField
 import com.novamarket.feature.authentication.presentation.components.NameField
 import com.novamarket.feature.authentication.presentation.components.PasswordField
+import com.novamarket.feature.authentication.presentation.viewmodels.RegisterState
 import com.novamarket.feature.authentication.presentation.viewmodels.RegisterViewModel
 
 @Composable
 fun RegisterContent(
-    viewModel: RegisterViewModel
+    viewModel: RegisterViewModel,
+    state: RegisterState
 ) {
     val scrollState = rememberScrollState()
     var name by remember { mutableStateOf("") }
@@ -50,7 +51,6 @@ fun RegisterContent(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
-    val state by viewModel.uiState.collectAsState()
 
     Scaffold(
         modifier = Modifier.statusBarsPadding(),
@@ -123,7 +123,7 @@ fun RegisterContent(
                         value = email,
                         onValueChange = { email = it }
                     )
-                    if (state.error){
+                    if (state.error) {
                         Text(
                             text = "Ingresá un correo electrónico válido.",
                             fontSize = 12.sp,
