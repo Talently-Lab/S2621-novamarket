@@ -4,6 +4,7 @@ import com.novamarket.feature.authentication.data.remote.LoginApi
 import com.novamarket.feature.authentication.data.repositories.LoginRepositoryImp
 import com.novamarket.feature.authentication.domain.repositories.LoginRepository
 import com.novamarket.feature.authentication.presentation.viewmodels.LoginViewModel
+import com.novamarket.feature.authentication.presentation.viewmodels.RegisterViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
@@ -11,4 +12,5 @@ val auth = module {
     single { LoginApi(get()) }
     single<LoginRepository> { LoginRepositoryImp(get()) }
     factoryOf(::LoginViewModel)
+    factoryOf(::RegisterViewModel)
 }

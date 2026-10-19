@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -103,6 +104,94 @@ fun PasswordField(
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
+            )
+        )
+    }
+}
+
+@Composable
+fun NameField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = "Nombre",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.W500,
+            color = Color(0xFF1F1F1F)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                Text(
+                    text = "Tu nombre",
+                    fontSize = 14.sp,
+                    color = Color(0xFF9E9E9E)
+                )
+            },
+            shape = RectangleShape,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = Color(0xFFB8B8B8),
+                unfocusedBorderColor = Color(0xFFB8B8B8),
+                focusedTextColor = Color(0xFF1F1F1F),
+                unfocusedTextColor = Color(0xFF1F1F1F)
+            ),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                capitalization = KeyboardCapitalization.Words,
+                imeAction = ImeAction.Next
+            )
+        )
+    }
+}
+
+@Composable
+fun LastNameField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = "Apellido",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.W500,
+            color = Color(0xFF1F1F1F)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                Text(
+                    text = "Tu apellido",
+                    fontSize = 14.sp,
+                    color = Color(0xFF9E9E9E)
+                )
+            },
+            shape = RectangleShape,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = Color(0xFFB8B8B8),
+                unfocusedBorderColor = Color(0xFFB8B8B8),
+                focusedTextColor = Color(0xFF1F1F1F),
+                unfocusedTextColor = Color(0xFF1F1F1F)
+            ),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                capitalization = KeyboardCapitalization.Words,
+                imeAction = ImeAction.Next
             )
         )
     }
