@@ -86,85 +86,95 @@ export const register = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => { try { const { email, password } = req.body;
 
-if (!email || !password) {
-  return sendError(
-    res,
-    400,
-    "VALIDATION_ERROR",
-    "Email y contraseña son obligatorios",
-  );
-}
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-const user = await User.findOne({
-  email: email.toLowerCase(),
-});
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !email.trim() ||
+      !password.trim()
+    ) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "Email y contraseña deben ser textos no vacíos",
+      );
+    }
 
-if (!user) {
-  return sendError(
-    res,
-    401,
-    "INVALID_CREDENTIALS",
-    "Email o contraseña incorrectos",
-  );
-}
+    const user = await User.findOne({
+      email: email.trim().toLowerCase(),
+    });
 
-const passwordIsValid = await comparePassword(
-  password,
-  user.passwordHash,
-);
+    if (!user) {
+      return sendError(
+        res,
+        401,
+        "INVALID_CREDENTIALS",
+        "Email o contraseña incorrectos",
+      );
+    }
 
-if (!passwordIsValid) {
-  return sendError(
-    res,
-    401,
-    "INVALID_CREDENTIALS",
-    "Email o contraseña incorrectos",
-  );
-}
+    const passwordIsValid = await comparePassword(
+      password,
+      user.passwordHash,
+    );
 
-if (!process.env.JWT_SECRET) {
-  console.error("Falta configurar JWT_SECRET");
-  return sendError(
-    res,
-    500,
-    "INTERNAL_SERVER_ERROR",
-    "Error interno del servidor",
-  );
-}
+    if (!passwordIsValid) {
+      return sendError(
+        res,
+        401,
+        "INVALID_CREDENTIALS",
+        "Email o contraseña incorrectos",
+      );
+    }
 
-const token = jwt.sign(
-  {
-    id: user._id.toString(),
-    role: user.role,
-  },
-  process.env.JWT_SECRET,
-  {
-    expiresIn: process.env.JWT_EXPIRES_IN || "8h",
-  },
-);
+    if (!process.env.JWT_SECRET) {
+      console.error("Falta configurar JWT_SECRET");
+      return sendError(
+        res,
+        500,
+        "INTERNAL_SERVER_ERROR",
+        "Error interno del servidor",
+      );
+    }
 
-return res.status(200).json({
-  message: "Inicio de sesión exitoso",
-  token,
-  user: {
-    id: user._id,
-    name: user.name,
-    lastName: user.lastName,
-    email: user.email,
-    role: user.role,
-  },
-});
-} catch (error) { console.error("Error al iniciar sesión:", error);
+    const token = jwt.sign(
+      {
+        id: user._id.toString(),
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: process.env.JWT_EXPIRES_IN || "8h",
+      },
+    );
 
-return sendError(
-  res,
-  500,
-  "INTERNAL_SERVER_ERROR",
-  "Error interno del servidor",
-);
-} };
+    return res.status(200).json({
+      message: "Inicio de sesión exitoso",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Error al iniciar sesión:", error);
+
+    return sendError(
+      res,
+      500,
+      "INTERNAL_SERVER_ERROR",
+      "Error interno del servidor",
+    );
+  }
+};
 
 
 export const me = async (req, res) => {
