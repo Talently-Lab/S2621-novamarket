@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import Category from "../models/Category.js";
 import Product from "../models/Product.js";
 import { sendError } from "../utils/apiError.js";
 
@@ -71,17 +70,19 @@ export const listProducts = async (req, res) => {
     }
 
     if (category) {
-      const categoryQuery = String(category).trim();
-      const categoryFilter = { active: true };
+      const categoryId = String(category).trim();
 
-      if (mongoose.isValidObjectId(categoryQuery)) {
-        categoryFilter._id = categoryQuery;
-      } else {
-        categoryFilter.name = new RegExp(escapeRegex(categoryQuery), "i");
+      if (!mongoose.isValidObjectId(categoryId)) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "category debe ser el ID de la categoría",
+          { category: "Usar el id devuelto por GET /api/categories" },
+        );
       }
 
-      const categories = await Category.find(categoryFilter).select("_id");
-      filter.category = { $in: categories.map((item) => item._id) };
+      filter.category = categoryId;
     }
 
     if (featured === "true") {
