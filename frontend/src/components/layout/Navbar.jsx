@@ -11,6 +11,7 @@ import { LogOut, Menu, ShoppingCart, X } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 import useCart from '../../hooks/useCart';
 import SearchBar from '../product/SearchBar';
+import CategoryMenu from './CategoryMenu';
 import Logo from './Logo';
 
 const NAV_ITEM_CLASSES =
@@ -121,6 +122,7 @@ function Navbar() {
           >
             Catálogo
           </NavLink>
+          <CategoryMenu onNavigate={closeMenu} />
           {isAdmin && (
             <NavLink to="/admin" onClick={closeMenu} className={navLinkClasses}>
               Admin
