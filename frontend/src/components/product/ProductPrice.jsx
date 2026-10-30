@@ -1,9 +1,4 @@
-const PRICE_FORMAT = new Intl.NumberFormat('es-AR', {
-  style: 'currency',
-  currency: 'ARS',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
+import { formatPrice } from '../../utils/format';
 
 const SIZE_CLASSES = {
   md: { current: 'text-xl', regular: 'text-sm' },
@@ -18,7 +13,7 @@ function ProductPrice({ regularPrice, salePrice, size = 'md' }) {
   if (!onSale) {
     return (
       <p className={`font-bold text-ink ${classes.current}`}>
-        {PRICE_FORMAT.format(regularPrice)}
+        {formatPrice(regularPrice)}
       </p>
     );
   }
@@ -27,11 +22,11 @@ function ProductPrice({ regularPrice, salePrice, size = 'md' }) {
     <p className="flex flex-wrap items-baseline gap-x-2">
       <span className={`font-bold text-ink ${classes.current}`}>
         <span className="sr-only">Precio de oferta: </span>
-        {PRICE_FORMAT.format(salePrice)}
+        {formatPrice(salePrice)}
       </span>
       <del className={`text-muted ${classes.regular}`}>
         <span className="sr-only">Precio anterior: </span>
-        {PRICE_FORMAT.format(regularPrice)}
+        {formatPrice(regularPrice)}
       </del>
     </p>
   );
