@@ -1,11 +1,14 @@
 # NovaMarket — Frontend
 
-Frontend del MVP de NovaMarket, un e-commerce. Esta aplicación consume la API del backend (carpeta `/backend` del monorepo).
+Frontend del MVP de NovaMarket, el canal de venta online propio de una tienda de tecnología que hoy vende por redes sociales y marketplaces. Cubre el recorrido de compra (Home, catálogo con búsqueda y filtro por categoría, detalle de producto, carrito, checkout simulado y confirmación del pedido), el registro y el inicio de sesión. Consume la API del backend (carpeta `/backend` del monorepo), publicada en Render.
+
+**Deploy:** https://s2621-novamarket.vercel.app (estado de la integración con la API en [Deploy en Vercel](#deploy-en-vercel)).
 
 ## Stack
 
 | Herramienta      | Versión |
 | ---------------- | ------- |
+| Node.js          | 20.19+  |
 | React            | 18.3    |
 | Vite             | 8.3     |
 | Tailwind CSS     | 3.4     |
@@ -30,19 +33,67 @@ npm run dev
 
 La app queda disponible en `http://localhost:5173`.
 
+`.env.example` apunta al backend local (`http://localhost:3000/api`). Para usar la API publicada en Render, poné `VITE_API_URL=https://novamarket-api-8u61.onrender.com/api` en el `.env` o en un `.env.local`, que tiene prioridad sobre `.env`. Render acepta pedidos desde `http://localhost:5173`, así que el dev server tiene que correr en ese puerto (el que usa Vite por defecto).
+
 Otros scripts:
 
 - `npm run build`: genera el build de producción en `dist/`.
 - `npm run preview`: sirve el build localmente.
 - `npm run lint`: corre ESLint.
 - `npm run format`: formatea el código con Prettier.
+- `npm run format:check`: verifica el formato sin modificar archivos (lo corren el pre-push y CI).
 
 ## Variables de entorno
 
-| Variable          | Descripción                                                                                                 | Ejemplo                     |
-| ----------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------- |
-| `VITE_API_URL`    | URL base de la API                                                                                          | `http://localhost:3000/api` |
-| `VITE_ASSETS_URL` | Opcional. Host desde el que se sirven las imágenes (`/uploads`). Por defecto, `VITE_API_URL` sin el `/api`. | `http://localhost:3000`     |
+| Variable          | Descripción                                                                                                 | Local                       | Deploy (Vercel)                                                |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------- | -------------------------------------------------------------- |
+| `VITE_API_URL`    | URL base de la API                                                                                          | `http://localhost:3000/api` | `https://novamarket-api-8u61.onrender.com/api`                 |
+| `VITE_ASSETS_URL` | Opcional. Host desde el que se sirven las imágenes (`/uploads`). Por defecto, `VITE_API_URL` sin el `/api`. | `http://localhost:3000`     | Sin definir: se usa `https://novamarket-api-8u61.onrender.com` |
+
+Vite reemplaza estas variables al compilar: si cambia una en Vercel, hace falta un deploy nuevo. `.env` y `.env.local` no se versionan (están en `.gitignore`); el repo solo tiene `.env.example`.
+
+## Deploy en Vercel
+
+| Dato                | Valor                                                                     |
+| ------------------- | ------------------------------------------------------------------------- |
+| URL de producción   | https://s2621-novamarket.vercel.app                                       |
+| Proyecto en Vercel  | `s2621-novamarket`                                                        |
+| Carpeta del deploy  | `frontend/`                                                               |
+| Framework           | Vite (fijado en `vercel.json`)                                            |
+| Build y salida      | `npm run build` → `dist/`                                                 |
+| Variables del build | `VITE_API_URL` con la URL de Render, en Production, Preview y Development |
+
+- `vercel.json` reescribe cualquier ruta a `index.html`, así los enlaces directos (`/products/:id`, `/orders/:id`, `/checkout`) no dan 404 al abrirlos o recargarlos. Vercel sirve primero los archivos que existen (`/assets/*`, `/favicon.svg`) y el resto lo resuelve React Router; una ruta desconocida muestra `NotFound`.
+- `.vercelignore` evita subir `node_modules`, `dist` y los `.env` locales: el build usa las variables cargadas en el proyecto de Vercel.
+- El proyecto de Vercel no está conectado al repo de GitHub: se deploya con la CLI desde `frontend/` (hace falta acceso al proyecto en Vercel):
+
+```bash
+npx vercel login
+npx vercel link --project s2621-novamarket
+npx vercel deploy --prod
+```
+
+Estado de la integración con la API de Render al 30/10/2026:
+
+| Qué                                                      | Estado                                                                                                                                                                                                   |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CORS                                                     | Render solo permite el origen `http://localhost:5173`, así que el navegador bloquea los pedidos del deploy. Falta que Back agregue `https://s2621-novamarket.vercel.app` a los orígenes permitidos.      |
+| `GET /api/categories` y `GET /api/products`              | Desplegados. Categorías de la Home, filtro por categoría, búsqueda, destacados y ofertas probados desde `localhost:5173`. Los productos todavía no tienen imágenes (`images: []`): se ve el placeholder. |
+| `POST /api/auth/register`, `/login` y `GET /api/auth/me` | Desplegados: responden con las validaciones del contrato (400 sin datos, 401 sin token).                                                                                                                 |
+| `GET /api/products/:id`                                  | Responde 404: el detalle muestra el error genérico con "Reintentar".                                                                                                                                     |
+| `POST /api/orders` y `GET /api/orders/:id`               | Responden 404: el checkout no puede crear el pedido y la confirmación no carga.                                                                                                                          |
+
+## Capturas
+
+Tomadas el 30/10/2026 con el dev server contra la API de Render, en 1440 × 900 (desktop) y 375 × 812 (mobile).
+
+| Pantalla | Desktop                                                                                | Mobile                                                                               |
+| -------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Home     | <img src="docs/screenshots/home-desktop.png" alt="Home en desktop" width="560">        | <img src="docs/screenshots/home-mobile.png" alt="Home en mobile" width="180">        |
+| Catálogo | <img src="docs/screenshots/catalog-desktop.png" alt="Catálogo en desktop" width="560"> | <img src="docs/screenshots/catalog-mobile.png" alt="Catálogo en mobile" width="180"> |
+| Detalle  | Pendiente: `GET /api/products/:id` todavía no está desplegado en Render.               | Pendiente.                                                                           |
+| Carrito  | <img src="docs/screenshots/cart-desktop.png" alt="Carrito en desktop" width="560">     | <img src="docs/screenshots/cart-mobile.png" alt="Carrito en mobile" width="180">     |
+| Checkout | Pendiente: la captura requiere una sesión de cliente.                                  | Pendiente.                                                                           |
 
 ## Estructura de carpetas
 
@@ -345,6 +396,11 @@ Los puntos abiertos con Back quedaron resueltos en el Contrato API v0.3 (§31) y
 | `FE-06` | `GET /api/products` acepta `active` = `true`, `false` o `all`, solo para `ADMIN` (por defecto, y para público y `CLIENT`, solo activos). Reactivar no tiene endpoint propio: es un `PUT /api/products/:id` completo con `active: true`. | `ProductTable` pide `?active=all` y ofrece la acción "Reactivar" en los productos inactivos.                                                         |
 | `FE-07` | `PUT /api/products/:id` reemplaza el set completo de imágenes: lo enviado es el estado final (máximo 5).                                                                                                                                | `ProductForm` reenvía siempre las imágenes que se quieren conservar junto con las nuevas.                                                            |
 
+#### Con Back (deploy en Render)
+
+- CORS: agregar `https://s2621-novamarket.vercel.app` a los orígenes permitidos (hoy solo `http://localhost:5173`).
+- Desplegar `GET /api/products/:id`, `POST /api/orders` y `GET /api/orders/:id`, que hoy responden 404. Con el detalle desplegado se suma su captura al README.
+
 #### Con UX
 
 Wireframes pendientes:
@@ -374,3 +430,4 @@ Wireframes pendientes:
 | 29/10/2026 | Layout, login y registro implementados con la paleta del UI Kit de UX/UI (Figma), cargada como tokens en `tailwind.config.js` (`ink`, `navy`, `primary`, `hover`, `accent`, `canvas`, `soft`, `border`, `control-border`, `muted`, `error`, `success`), con Inter para la UI y el logo en Fredoka One. El `Navbar` incluye el buscador (`SearchBar`, que navega a `/products?search=`), "Catálogo", "Admin" solo para `ADMIN`, el área de cuenta ("Ingresar" sin sesión; "Hola, {name}" y "Cerrar sesión" con sesión) y el botón del carrito sin contador; en mobile, logo y carrito en la primera fila y "Menú" y buscador en la segunda. "Mis pedidos" se agrega cuando existan las páginas de órdenes. El `Footer` muestra el logo, "Tecnología y electrónica", el botón "Volver al catálogo" y el copyright, sin enlaces de soporte ni texto legal. Se suman `Logo` (lo usan `Navbar` y `Footer`) y `Notice` (avisos de cuenta creada y sesión vencida en `/login`, y el aviso de `ADMIN` en `Checkout`). `Login` vuelve a la ruta de origen (`state.from`) o a la Home; `Register` redirige a `/login` con el email cargado. | Son los foundations y el layout definidos por UX/UI en el UI Kit. El texto legal y los enlaces de soporte del `Footer` siguen pendientes con UX, así que no se inventan. El contador del carrito llega con `CartContext`.                                                                                                                                                                                                                                                  | —                                                               |
 | 29/10/2026 | Catálogo, filtros y detalle de producto implementados. `productService`, `categoryService` y `getImageUrl` (en `services/imageUrl.js`, con `VITE_ASSETS_URL` opcional); `useProducts`, `useProduct` y `useCategories` se apoyan en `useRequest`, que cancela con `AbortController` el pedido anterior al cambiar los parámetros. El catálogo guarda `search`, `category` y `page` en la URL, busca con debounce de 400 ms y muestra un skeleton al cargar. `ProductCard` enlaza al detalle y todavía no tiene botón de carrito; en `ProductDetail` el botón "Agregar al carrito" queda visible sin lógica hasta que llegue `CartContext`. Solo `PRODUCT_NOT_FOUND` muestra el estado de producto no disponible; cualquier otro error muestra `ErrorMessage` con "Reintentar". La Home muestra categorías y destacados (4); la sección de ofertas y el `CategoryMenu` del `Navbar` quedan para otro PR.                                                                                                                                                                                                                            | El carrito llega en el próximo PR. Galería, banner de categorías y skeleton siguen a validar con UX. Al momento de este PR, `GET /api/categories` (PR de Back #18) y `GET /api/products/:id` todavía no están desplegados en Render.                                                                                                                                                                                                                                       | —                                                               |
 | 30/10/2026 | Carrito, checkout y confirmación del pedido implementados. `CartContext` (`CartContext.js`, `CartProvider.jsx` y `useCart`) guarda en cada ítem el `price` mostrado al agregarlo en lugar de `regularPrice` y `salePrice`, y expone `totalAmount` en lugar de `subtotal`. `ProductCard` suma el botón "Agregar al carrito" y el `Navbar` el contador. `Checkout` agrega un formulario de envío (nombre y dirección) que se valida solo en el cliente y no se envía; el resto sigue el contrato: `POST /api/orders` con `productId` y `quantity`, "Estamos creando tu pedido" mientras espera, `clearCart()` solo tras el 201 y navegación a `/orders/:id`; `INSUFFICIENT_STOCK` y `PRODUCT_NOT_FOUND` muestran el error con enlace al carrito. `OrderConfirmation` muestra la orden de `GET /api/orders/:id` (acepta la orden suelta o envuelta en `{ order }`). `formatPrice` y `formatDate` pasan a `utils/format.js`. Cupón de descuento, calculadora de envío y formulario de tarjeta quedan para la versión 2.                                                                                                               | Alcance del MVP acordado para el checkout: resumen, datos de envío y confirmación. Los datos de envío no forman parte del body de `POST /api/orders` en el Contrato v0.3: queda un `TODO` en `Checkout` hasta definirlo con Back. `ProductCard` permite agregar al carrito porque, al momento de este PR, `GET /api/products/:id` no está desplegado en Render y el detalle no carga. Tampoco están desplegados `POST /api/orders` ni `GET /api/orders/:id`.               | —                                                               |
+| 30/10/2026 | Deploy en Vercel (`https://s2621-novamarket.vercel.app`) desde `frontend/`, con `vercel.json` (framework Vite y rewrite de todas las rutas a `index.html`), `.vercelignore` y `VITE_API_URL` apuntando a Render en las variables del proyecto. `NotFound` deja de ser un placeholder: muestra un aviso y un enlace al inicio. El README suma la descripción del proyecto, las variables por entorno, el deploy, el estado de la API en Render y capturas en 1440 y 375.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | La guía del proyecto pide publicar el front en Vercel contra la API de Render. Con el rewrite, cualquier URL desconocida carga la app y cae en `NotFound`, que mostraba solo el texto "NotFound". El deploy queda bloqueado por CORS hasta que Back permita el origen de Vercel; el detalle y las órdenes esperan sus endpoints en Render.                                                                                                                                 | —                                                               |
