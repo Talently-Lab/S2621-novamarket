@@ -8,6 +8,7 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Admin from '../pages/Admin';
 import NotFound from '../pages/NotFound';
+import OrderConfirmation from '../pages/OrderConfirmation';
 import AuthProvider from '../context/AuthProvider';
 import CartProvider from '../context/CartProvider';
 import Layout from '../components/layout/Layout';
@@ -29,6 +30,7 @@ function AppRouter() {
               <Route path="/register" element={<Register />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/orders/:id" element={<OrderConfirmation />} />
               </Route>
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<Admin />} />
