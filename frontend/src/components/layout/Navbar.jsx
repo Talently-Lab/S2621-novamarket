@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 import { LogOut, Menu, ShoppingCart, X } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
+import useCart from '../../hooks/useCart';
 import SearchBar from '../product/SearchBar';
 import Logo from './Logo';
 
@@ -20,6 +21,7 @@ const navLinkClasses = ({ isActive }) =>
 
 function Navbar() {
   const { user, isAuthenticated, isAdmin, loading, logout } = useAuth();
+  const { totalItems } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -134,6 +136,14 @@ function Navbar() {
         >
           <ShoppingCart aria-hidden="true" className="h-5 w-5" />
           Carrito
+          {totalItems > 0 && (
+            <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-ink px-2 text-sm font-bold text-white">
+              {totalItems}
+              <span className="sr-only">
+                {totalItems === 1 ? ' producto' : ' productos'}
+              </span>
+            </span>
+          )}
         </Link>
       </div>
     </header>

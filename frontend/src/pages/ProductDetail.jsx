@@ -9,7 +9,9 @@ import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import Loader from '../components/ui/Loader';
+import Notice from '../components/ui/Notice';
 import QuantitySelector from '../components/ui/QuantitySelector';
+import useCart from '../hooks/useCart';
 import useProduct from '../hooks/useProduct';
 
 const CATALOG_LINK_CLASSES =
@@ -25,11 +27,22 @@ function BackToCatalog() {
 }
 
 function ProductView({ product }) {
+  const { items, addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [lastAdded, setLastAdded] = useState(0);
   const outOfStock = product.stock <= 0;
   const onSale = product.salePrice !== null && product.salePrice !== undefined;
+  const inCart =
+    items.find((item) => item.productId === product.id)?.quantity ?? 0;
+  // Lo que todavía se puede agregar sin superar el stock, contando lo que ya está en el carrito.
+  const available = Math.max(product.stock - inCart, 0);
+  const selectedQuantity = Math.min(quantity, available);
 
-  // El carrito llega en el próximo PR: el botón queda visible, sin lógica todavía.
+  const handleAdd = () => {
+    setLastAdded(addItem(product, selectedQuantity));
+    setQuantity(1);
+  };
+
   return (
     <article className="flex flex-col gap-8">
       <BackToCatalog />
@@ -68,17 +81,40 @@ function ProductView({ product }) {
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <QuantitySelector
-              value={outOfStock ? 0 : quantity}
+              value={selectedQuantity}
               min={1}
-              max={product.stock}
+              max={available}
               onChange={setQuantity}
-              disabled={outOfStock}
+              disabled={available === 0}
             />
-            <Button disabled={outOfStock} className="sm:flex-1">
+            <Button
+              onClick={handleAdd}
+              disabled={available === 0}
+              className="sm:flex-1"
+            >
               <ShoppingCart aria-hidden="true" className="h-5 w-5" />
               Agregar al carrito
             </Button>
           </div>
+
+          {lastAdded > 0 && (
+            <Notice variant="success">
+              Agregaste {lastAdded} {lastAdded === 1 ? 'unidad' : 'unidades'} al
+              carrito.{' '}
+              <Link
+                to="/cart"
+                className="focus-ring rounded-control font-semibold underline"
+              >
+                Ver carrito
+              </Link>
+            </Notice>
+          )}
+          {!outOfStock && available === 0 && (
+            <p className="text-muted">
+              Ya tenés en el carrito todo el stock disponible ({inCart}{' '}
+              {inCart === 1 ? 'unidad' : 'unidades'}).
+            </p>
+          )}
 
           {product.description && (
             <div className="flex flex-col gap-2">
