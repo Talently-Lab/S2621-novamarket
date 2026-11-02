@@ -4,7 +4,7 @@ const ASSETS_URL = (
   (import.meta.env.VITE_API_URL ?? '').replace(/\/api\/?$/, '')
 ).replace(/\/$/, '');
 
-// Convierte una ruta relativa de `images` (por ejemplo, /uploads/products/x.webp) en URL completa.
+// Convierte un valor de `images` en URL: las absolutas (Cloudinary) pasan sin cambios y las rutas relativas (por ejemplo, /uploads/products/x.webp) se completan con el host de Back.
 export function getImageUrl(path) {
   if (!path) {
     return null;
