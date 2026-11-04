@@ -123,3 +123,45 @@ export const listProducts = async (req, res) => {
     );
   }
 };
+
+export const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "El ID del producto no es válido",
+      );
+    }
+
+    const product = await Product.findOne({
+      _id: id,
+      active: true,
+    }).populate("category", "name");
+
+    if (!product) {
+      return sendError(
+        res,
+        404,
+        "PRODUCT_NOT_FOUND",
+        "Producto no encontrado",
+      );
+    }
+
+    return res.status(200).json({
+      product: mapProduct(product),
+    });
+  } catch (error) {
+    console.error("Error al obtener producto:", error);
+
+    return sendError(
+      res,
+      500,
+      "INTERNAL_SERVER_ERROR",
+      "Error interno del servidor",
+    );
+  }
+};
