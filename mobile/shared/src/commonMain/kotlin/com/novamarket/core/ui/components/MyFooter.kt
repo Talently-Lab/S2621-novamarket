@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,7 +34,7 @@ fun MyFooter(
         modifier = modifier.fillMaxWidth(),
         shape = RectangleShape,
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF5F5F5)
+            containerColor = Color(0xFF10243A)
         )
     ) {
         Column(
@@ -42,20 +43,20 @@ fun MyFooter(
             Text(
                 text = title,
                 style = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.W600,
                     fontSize = 20.sp,
                     lineHeight = 22.sp,
-                    color = Color(0xFF1F1F1F)
+                    color = Color(0xFFFFFFFF)
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = subtitle,
                 style = TextStyle(
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.W400,
                     fontSize = 12.sp,
-                    lineHeight = 15.4.sp,
-                    color = Color(0xFF616161)
+                    lineHeight = 15.sp,
+                    color = Color(0xFFFFFFFF)
                 )
             )
 
@@ -63,9 +64,9 @@ fun MyFooter(
             OutlinedButton(
                 onClick = { },
                 modifier = Modifier
-                    .width(327.dp)
+                    .fillMaxWidth()
                     .height(48.dp),
-                shape = RectangleShape,
+                shape = RoundedCornerShape(10.dp),
                 border = BorderStroke(1.dp, Color(0xFFB8B8B8)),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = Color(0xFFFFFFFF),
@@ -78,7 +79,8 @@ fun MyFooter(
                     style = TextStyle(
                         fontWeight = FontWeight.Medium,
                         fontSize = 14.sp
-                    )
+                    ),
+                    color = Color(0xFF132238)
                 )
             }
         }
