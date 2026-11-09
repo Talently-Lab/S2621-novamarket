@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useId, useState } from 'react';
+import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search } from 'lucide-react';
 import CategoryFilter from '../components/product/CategoryFilter';
 import ProductGrid from '../components/product/ProductGrid';
 import Button from '../components/ui/Button';
@@ -8,15 +7,12 @@ import Pagination from '../components/ui/Pagination';
 import useCategories from '../hooks/useCategories';
 import useProducts from '../hooks/useProducts';
 
-const SEARCH_DELAY_MS = 400;
-
 function parsePage(value) {
   const page = Number.parseInt(value, 10);
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
 function Products() {
-  const searchId = useId();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
   const category = searchParams.get('category') ?? '';
@@ -26,6 +22,7 @@ function Products() {
   const categories = useCategories();
 
   // Búsqueda, categoría y página viven en la URL; cambiar un filtro vuelve a la página 1.
+  // El término de búsqueda lo escribe el buscador de la barra de navegación.
   const updateParams = useCallback(
     (changes, options) => {
       setSearchParams((current) => {
@@ -45,41 +42,9 @@ function Products() {
     [setSearchParams],
   );
 
-  // `term` es lo que se escribe; `pushedTerm` es lo último que este campo llevó a la URL.
-  // Si la URL cambia por otro lado (Navbar, atrás/adelante, limpiar), el campo se sincroniza.
-  const [term, setTerm] = useState(search);
-  const [syncedSearch, setSyncedSearch] = useState(search);
-  const [pushedTerm, setPushedTerm] = useState(null);
-
-  if (search !== syncedSearch) {
-    setSyncedSearch(search);
-
-    if (search === pushedTerm) {
-      setPushedTerm(null);
-    } else {
-      setTerm(search);
-    }
-  }
-
-  useEffect(() => {
-    const value = term.trim();
-
-    if (value === search) {
-      return undefined;
-    }
-
-    const timer = setTimeout(() => {
-      setPushedTerm(value);
-      updateParams({ search: value, page: null }, { replace: true });
-    }, SEARCH_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [term, search, updateParams]);
-
   const hasFilters = Boolean(search || category || page > 1);
 
   const clearFilters = () => {
-    setTerm('');
     updateParams({ search: null, category: null, page: null });
   };
 
@@ -104,26 +69,6 @@ function Products() {
       </div>
 
       <div className="flex flex-col gap-4 rounded-card border border-border bg-white p-4 md:p-6">
-        <div className="flex flex-col gap-2">
-          <label htmlFor={searchId} className="text-sm font-medium text-ink">
-            Buscar en el catálogo
-          </label>
-          <div className="relative">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted"
-            />
-            <input
-              id={searchId}
-              type="search"
-              value={term}
-              onChange={(event) => setTerm(event.target.value)}
-              placeholder="Nombre, marca o descripción"
-              className="focus-ring h-12 w-full rounded-control border border-control-border bg-canvas pl-12 pr-4 text-ink placeholder:text-muted"
-            />
-          </div>
-        </div>
-
         <CategoryFilter
           categories={categories.data}
           value={category}
