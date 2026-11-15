@@ -9,19 +9,24 @@ import ordersRoutes from "./routes/orders.routes.js";
 
 const app = express();
 
-//Encabezados HTTP para mejorar la seguridad de la aplicación
+// Encabezados HTTP de seguridad
 app.use(helmet());
 
-//Configuración de CORS para permitir solicitudes desde el frontend
+// Origen permitido mediante variable de entorno
+const allowedOrigin =
+  process.env.CORS_ORIGIN || "http://localhost:5173";
+
+// Configuración de CORS
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigin,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 app.use(express.json());
+
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/categories", categoriesRoutes);
