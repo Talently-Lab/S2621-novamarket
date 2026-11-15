@@ -1,22 +1,45 @@
 import User from "../models/User.js";
+
 import {
-   hashPassword,
-   validatePassword,
-   comparePassword,
+  hashPassword,
+  validatePassword,
+  comparePassword,
 } from "../utils/password.js";
 import { sendError } from "../utils/apiError.js";
-import jwt from "jsonwebtoken";
+import { getJwtSecret, signAuthToken } from "../utils/jwt.js";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isNonEmptyString = (value) =>
+  typeof value === "string" && value.trim().length > 0;
 
 export const register = async (req, res) => {
   try {
-    const { name, lastName, email, password } = req.body;
+    const { name, lastName, email, password } = req.body ?? {};
 
-    if (!name || !lastName || !email || !password) {
+    if (
+      !isNonEmptyString(name) ||
+      !isNonEmptyString(lastName) ||
+      !isNonEmptyString(email) ||
+      !isNonEmptyString(password)
+    ) {
       return sendError(
         res,
         400,
         "VALIDATION_ERROR",
         "Todos los campos son obligatorios",
+      );
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "Hay campos inválidos",
+        { email: "El email no es válido" },
       );
     }
 
@@ -34,7 +57,7 @@ export const register = async (req, res) => {
     }
 
     const existingUser = await User.findOne({
-      email: email.toLowerCase(),
+      email: normalizedEmail,
     });
 
     if (existingUser) {
@@ -49,9 +72,9 @@ export const register = async (req, res) => {
     const passwordHash = await hashPassword(password);
 
     const user = await User.create({
-      name,
-      lastName,
-      email,
+      name: name.trim(),
+      lastName: lastName.trim(),
+      email: normalizedEmail,
       passwordHash,
     });
 
@@ -132,7 +155,7 @@ export const login = async (req, res) => {
       );
     }
 
-    if (!process.env.JWT_SECRET) {
+    if (!getJwtSecret()) {
       console.error("Falta configurar JWT_SECRET");
       return sendError(
         res,
@@ -142,16 +165,7 @@ export const login = async (req, res) => {
       );
     }
 
-    const token = jwt.sign(
-      {
-        id: user._id.toString(),
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN || "8h",
-      },
-    );
+    const token = signAuthToken(user);
 
     return res.status(200).json({
       message: "Inicio de sesión exitoso",

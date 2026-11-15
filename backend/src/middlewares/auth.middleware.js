@@ -1,5 +1,5 @@
-import jwt from "jsonwebtoken";
 import { sendError } from "../utils/apiError.js";
+import { getJwtSecret, verifyAuthToken } from "../utils/jwt.js";
 
 export const authenticateToken = (req, res, next) => {
   const authorization = req.headers.authorization;
@@ -15,7 +15,7 @@ export const authenticateToken = (req, res, next) => {
 
   const token = authorization.slice(7);
 
-  if (!process.env.JWT_SECRET) {
+  if (!getJwtSecret()) {
     console.error("Falta configurar JWT_SECRET");
     return sendError(
       res,
@@ -26,10 +26,30 @@ export const authenticateToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = verifyAuthToken(token);
+
+    if (!decoded?.id || !decoded?.role) {
+      return sendError(
+        res,
+        401,
+        "INVALID_TOKEN",
+        "El token de autenticación no es válido",
+      );
+    }
+
     req.user = decoded;
     next();
   } catch (error) {
+    if (error.name === "JwtSecretMissing") {
+      console.error("Falta configurar JWT_SECRET");
+      return sendError(
+        res,
+        500,
+        "INTERNAL_SERVER_ERROR",
+        "Error interno del servidor",
+      );
+    }
+
     if (error.name === "TokenExpiredError") {
       return sendError(
         res,
