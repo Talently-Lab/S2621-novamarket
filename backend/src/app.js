@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+
 import authRoutes from "./routes/auth.routes.js";
 import productsRoutes from "./routes/products.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
@@ -7,8 +9,14 @@ import ordersRoutes from "./routes/orders.routes.js";
 
 const app = express();
 
-const allowedOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
+// Encabezados HTTP de seguridad
+app.use(helmet());
 
+// Origen permitido mediante variable de entorno
+const allowedOrigin =
+  process.env.CORS_ORIGIN || "http://localhost:5173";
+
+// Configuración de CORS
 app.use(
   cors({
     origin: allowedOrigin,
@@ -18,6 +26,7 @@ app.use(
 );
 
 app.use(express.json());
+
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/categories", categoriesRoutes);
