@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+
 import authRoutes from "./routes/auth.routes.js";
 import productsRoutes from "./routes/products.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
@@ -7,6 +9,10 @@ import ordersRoutes from "./routes/orders.routes.js";
 
 const app = express();
 
+//Encabezados HTTP para mejorar la seguridad de la aplicación
+app.use(helmet());
+
+//Configuración de CORS para permitir solicitudes desde el frontend
 app.use(
   cors({
     origin: "http://localhost:5173",
