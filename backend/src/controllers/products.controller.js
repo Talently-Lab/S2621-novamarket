@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
+import Category from "../models/Category.js";
 import { sendError } from "../utils/apiError.js";
 
 const DEFAULT_PAGE = 1;
@@ -42,6 +43,396 @@ const mapProduct = (product) => ({
   featured: product.featured,
 });
 
+export const createProduct = async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      brand,
+      regularPrice,
+      salePrice,
+      category,
+      stock,
+      images,
+      specifications,
+      active,
+      featured,
+    } = req.body ?? {};
+
+    const fields = {};
+
+    if (typeof name !== "string" || !name.trim()) {
+      fields.name = "El nombre es obligatorio";
+    }
+
+    if (typeof description !== "string" || !description.trim()) {
+      fields.description = "La descripción es obligatoria";
+    }
+
+    if (typeof brand !== "string" || !brand.trim()) {
+      fields.brand = "La marca es obligatoria";
+    }
+
+    if (
+      typeof regularPrice !== "number" ||
+      !Number.isFinite(regularPrice) ||
+      regularPrice <= 0
+    ) {
+      fields.regularPrice = "Debe ser un número mayor a cero";
+    }
+
+    if (
+      salePrice !== undefined &&
+      salePrice !== null &&
+      (
+        typeof salePrice !== "number" ||
+        !Number.isFinite(salePrice) ||
+        salePrice <= 0 ||
+        salePrice >= regularPrice
+      )
+    ) {
+      fields.salePrice = "Debe ser menor al precio regular";
+    }
+
+    if (
+      typeof category !== "string" ||
+      !mongoose.isValidObjectId(category)
+    ) {
+      fields.category = "La categoría debe tener un ID válido";
+    }
+
+    if (!Number.isInteger(stock) || stock < 0) {
+      fields.stock = "Debe ser un entero mayor o igual a cero";
+    }
+
+    if (
+      images !== undefined &&
+      (
+        !Array.isArray(images) ||
+        images.length > 5 ||
+        images.some(
+          (image) => typeof image !== "string" || !image.trim()
+        )
+      )
+    ) {
+      fields.images = "Se permiten hasta 5 URLs de imágenes válidas";
+    }
+
+    if (
+      specifications !== undefined &&
+      (
+        specifications === null ||
+        typeof specifications !== "object" ||
+        Array.isArray(specifications)
+      )
+    ) {
+      fields.specifications = "Debe ser un objeto";
+    }
+
+    if (active !== undefined && typeof active !== "boolean") {
+      fields.active = "Debe ser un valor booleano";
+    }
+
+    if (featured !== undefined && typeof featured !== "boolean") {
+      fields.featured = "Debe ser un valor booleano";
+    }
+
+    if (Object.keys(fields).length > 0) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "Revisá los campos del producto",
+        fields
+      );
+    }
+
+    const existingCategory = await Category.findOne({
+      _id: category,
+      active: true,
+    });
+
+    if (!existingCategory) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "La categoría no existe o está inactiva",
+        { category: "Seleccioná una categoría activa" }
+      );
+    }
+
+    const product = await Product.create({
+      name: name.trim(),
+      description: description.trim(),
+      brand: brand.trim(),
+      regularPrice,
+      salePrice: salePrice ?? null,
+      category,
+      stock,
+      images: images ?? [],
+      specifications: specifications ?? {},
+      ...(active !== undefined && { active }),
+      ...(featured !== undefined && { featured }),
+    });
+
+    await product.populate("category", "name");
+
+    return res.status(201).json({
+      product: mapProduct(product),
+    });
+  } catch (error) {
+    console.error("Error al crear producto:", error);
+
+    if (error.name === "ValidationError" || error.name === "CastError") {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "Revisá los campos del producto"
+      );
+    }
+
+    return sendError(
+      res,
+      500,
+      "INTERNAL_SERVER_ERROR",
+      "Error interno del servidor"
+    );
+  }
+};
+
+export const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "El ID del producto no es válido"
+      );
+    }
+
+    const {
+      name,
+      description,
+      brand,
+      regularPrice,
+      salePrice,
+      category,
+      stock,
+      images,
+      specifications,
+      active,
+      featured,
+    } = req.body ?? {};
+
+    const fields = {};
+
+    if (typeof name !== "string" || !name.trim()) {
+      fields.name = "El nombre es obligatorio";
+    }
+
+    if (typeof description !== "string" || !description.trim()) {
+      fields.description = "La descripción es obligatoria";
+    }
+
+    if (typeof brand !== "string" || !brand.trim()) {
+      fields.brand = "La marca es obligatoria";
+    }
+
+    if (
+      typeof regularPrice !== "number" ||
+      !Number.isFinite(regularPrice) ||
+      regularPrice <= 0
+    ) {
+      fields.regularPrice = "Debe ser un número mayor a cero";
+    }
+
+    if (
+      salePrice !== null &&
+      (
+        typeof salePrice !== "number" ||
+        !Number.isFinite(salePrice) ||
+        salePrice <= 0 ||
+        salePrice >= regularPrice
+      )
+    ) {
+      fields.salePrice = "Debe ser null o menor al precio regular";
+    }
+
+    if (
+      typeof category !== "string" ||
+      !mongoose.isValidObjectId(category)
+    ) {
+      fields.category = "La categoría debe tener un ID válido";
+    }
+
+    if (!Number.isInteger(stock) || stock < 0) {
+      fields.stock = "Debe ser un entero mayor o igual a cero";
+    }
+
+    if (
+      !Array.isArray(images) ||
+      images.length > 5 ||
+      images.some(
+        (image) => typeof image !== "string" || !image.trim()
+      )
+    ) {
+      fields.images = "Se permiten hasta 5 imágenes válidas";
+    }
+
+    if (
+      specifications === null ||
+      typeof specifications !== "object" ||
+      Array.isArray(specifications)
+    ) {
+      fields.specifications = "Debe ser un objeto";
+    }
+
+    if (typeof active !== "boolean") {
+      fields.active = "Debe ser un valor booleano";
+    }
+
+    if (typeof featured !== "boolean") {
+      fields.featured = "Debe ser un valor booleano";
+    }
+
+    if (Object.keys(fields).length > 0) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "Revisá los campos del producto",
+        fields
+      );
+    }
+
+    const existingCategory = await Category.findOne({
+      _id: category,
+      active: true,
+    });
+
+    if (!existingCategory) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "La categoría no existe o está inactiva",
+        { category: "Seleccioná una categoría activa" }
+      );
+    }
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return sendError(
+        res,
+        404,
+        "PRODUCT_NOT_FOUND",
+        "Producto no encontrado"
+      );
+    }
+
+    product.name = name.trim();
+    product.description = description.trim();
+    product.brand = brand.trim();
+    product.regularPrice = regularPrice;
+    product.salePrice = salePrice;
+    product.category = category;
+    product.stock = stock;
+    product.images = images;
+    product.specifications = specifications;
+    product.active = active;
+    product.featured = featured;
+
+    await product.save();
+    await product.populate("category", "name");
+
+    return res.status(200).json({
+  product: mapProduct(product),
+});
+
+  } catch (error) {
+    console.error("Error al actualizar producto:", error);
+
+    if (
+      error.name === "ValidationError" ||
+      error.name === "CastError"
+    ) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "Revisá los campos del producto"
+      );
+    }
+
+    return sendError(
+      res,
+      500,
+      "INTERNAL_SERVER_ERROR",
+      "Error interno del servidor"
+    );
+  }
+};
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "El ID del producto no es válido"
+      );
+    }
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return sendError(
+        res,
+        404,
+        "PRODUCT_NOT_FOUND",
+        "Producto no encontrado"
+      );
+    }
+
+    if (!product.active) {
+      return sendError(
+        res,
+        400,
+        "PRODUCT_ALREADY_INACTIVE",
+        "El producto ya está dado de baja"
+      );
+    }
+
+    product.active = false;
+
+    await product.save();
+    await product.populate("category", "name");
+
+    return res.status(200).json({
+      message: "Producto dado de baja correctamente",
+      product: mapProduct(product),
+    });
+  } catch (error) {
+    console.error("Error al eliminar producto:", error);
+
+    return sendError(
+      res,
+      500,
+      "INTERNAL_SERVER_ERROR",
+      "Error interno del servidor"
+    );
+  }
+};
+
 export const listProducts = async (req, res) => {
   try {
     const page = parsePositiveInt(req.query.page, DEFAULT_PAGE);
@@ -56,9 +447,41 @@ export const listProducts = async (req, res) => {
       );
     }
 
-    const limit = Math.min(parsedLimit, MAX_LIMIT);
-    const { search, category, featured, offer } = req.query;
-    const filter = { active: true };
+const limit = Math.min(parsedLimit, MAX_LIMIT);
+const { search, category, featured, offer, active } = req.query;
+
+const filter = {};
+
+if (active === undefined || active === "true") {
+  filter.active = true;
+} else if (active === "false") {
+  if (req.user?.role !== "ADMIN") {
+    return sendError(
+      res,
+      403,
+      "FORBIDDEN",
+      "No tenés permisos para consultar productos inactivos"
+    );
+  }
+
+  filter.active = false;
+} else if (active === "all") {
+  if (req.user?.role !== "ADMIN") {
+    return sendError(
+      res,
+      403,
+      "FORBIDDEN",
+      "No tenés permisos para consultar todos los productos"
+    );
+  }
+} else {
+  return sendError(
+    res,
+    400,
+    "VALIDATION_ERROR",
+    "active debe ser true, false o all"
+  );
+}
 
     if (search) {
       const pattern = new RegExp(escapeRegex(String(search).trim()), "i");
