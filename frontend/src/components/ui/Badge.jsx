@@ -2,6 +2,8 @@ const VARIANT_CLASSES = {
   offer: 'bg-accent text-ink',
   featured: 'bg-primary text-white',
   status: 'bg-ink text-white',
+  success: 'bg-success text-white',
+  neutral: 'border border-control-border bg-soft text-ink',
 };
 
 function Badge({ children, variant = 'status' }) {
