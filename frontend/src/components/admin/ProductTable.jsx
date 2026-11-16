@@ -6,7 +6,7 @@ import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 
 const ACTION_LINK_CLASSES =
-  'focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-control border border-control-border bg-white px-4 font-semibold text-ink transition-colors hover:bg-canvas';
+  'focus-ring inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-control border border-control-border bg-white px-4 font-semibold text-ink transition-colors hover:bg-canvas';
 
 function StatusBadge({ active }) {
   return active ? (
@@ -29,7 +29,9 @@ function FeaturedMark({ featured }) {
 
 function StockValue({ stock }) {
   return (
-    <span className={stock === 0 ? 'font-semibold text-error' : 'text-ink'}>
+    <span
+      className={`whitespace-nowrap ${stock === 0 ? 'font-semibold text-error' : 'text-ink'}`}
+    >
       {stock === 0 ? 'Sin stock' : stock}
     </span>
   );
@@ -37,7 +39,7 @@ function StockValue({ stock }) {
 
 function ProductActions({ product, busy, onDeactivate, onReactivate }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 xl:flex-nowrap">
       <Link
         to={`/admin/products/${product.id}/edit`}
         state={{ product }}
@@ -50,7 +52,7 @@ function ProductActions({ product, busy, onDeactivate, onReactivate }) {
       {product.active ? (
         <Button
           variant="secondary"
-          className="px-4"
+          className="whitespace-nowrap px-4"
           onClick={() => onDeactivate(product)}
           disabled={busy}
         >
@@ -61,7 +63,7 @@ function ProductActions({ product, busy, onDeactivate, onReactivate }) {
       ) : (
         <Button
           variant="secondary"
-          className="px-4"
+          className="whitespace-nowrap px-4"
           onClick={() => onReactivate(product)}
           loading={busy}
         >
@@ -74,11 +76,11 @@ function ProductActions({ product, busy, onDeactivate, onReactivate }) {
   );
 }
 
-// Tabla en desktop y tarjetas en mobile/tablet: mismo contenido, dos presentaciones.
+// Tabla desde xl (1280) y tarjetas debajo: mismo contenido, dos presentaciones.
 function ProductTable({ products, busyId, onDeactivate, onReactivate }) {
   return (
     <>
-      <div className="hidden overflow-x-auto rounded-card border border-border bg-white lg:block">
+      <div className="hidden overflow-x-auto rounded-card border border-border bg-white xl:block">
         <table className="w-full text-left">
           <caption className="sr-only">Productos</caption>
           <thead className="border-b border-border bg-canvas text-sm text-muted">
@@ -119,7 +121,10 @@ function ProductTable({ products, busyId, onDeactivate, onReactivate }) {
                     className="h-14 w-14 rounded-control border border-border"
                   />
                 </td>
-                <th scope="row" className="px-4 py-3 font-medium text-ink">
+                <th
+                  scope="row"
+                  className="min-w-48 px-4 py-3 font-medium text-ink"
+                >
                   <span className="block">{product.name}</span>
                   <span className="block text-sm font-normal text-muted">
                     {product.brand}
@@ -130,7 +135,7 @@ function ProductTable({ products, busyId, onDeactivate, onReactivate }) {
                     <span className="text-muted">Sin categoría</span>
                   )}
                 </td>
-                <td className="px-4 py-3">
+                <td className="whitespace-nowrap px-4 py-3">
                   <ProductPrice
                     regularPrice={product.regularPrice}
                     salePrice={product.salePrice}
@@ -160,7 +165,7 @@ function ProductTable({ products, busyId, onDeactivate, onReactivate }) {
         </table>
       </div>
 
-      <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:hidden">
+      <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:hidden">
         {products.map((product) => (
           <li
             key={product.id}

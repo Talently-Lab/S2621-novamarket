@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   Link,
   useLocation,
@@ -65,6 +65,14 @@ function AdminProducts() {
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const feedbackRef = useRef(null);
+
+  // El aviso recibe el foco: la fila que tenía el foco suele desaparecer del listado después de la acción.
+  useEffect(() => {
+    if (feedback) {
+      feedbackRef.current?.focus();
+    }
+  }, [feedback]);
 
   // Se limpia el state para que el aviso no reaparezca al recargar o volver atrás.
   useEffect(() => {
@@ -292,17 +300,24 @@ function AdminProducts() {
           <SearchBar
             key={search}
             value={search}
-            placeholder="Buscar en productos del panel"
+            placeholder="Buscar en el panel"
             onSearch={(term) => updateParams({ search: term, page: null })}
           />
         </div>
       </div>
 
-      {feedback?.variant === 'success' && (
-        <Notice variant="success">{feedback.message}</Notice>
-      )}
-      {feedback?.variant === 'error' && (
-        <ErrorMessage message={feedback.message} />
+      {feedback && (
+        <div
+          ref={feedbackRef}
+          tabIndex={-1}
+          className="focus-ring rounded-control"
+        >
+          {feedback.variant === 'success' ? (
+            <Notice variant="success">{feedback.message}</Notice>
+          ) : (
+            <ErrorMessage message={feedback.message} />
+          )}
+        </div>
       )}
 
       {content}
