@@ -6,12 +6,13 @@ import Cart from '../pages/Cart';
 import Checkout from '../pages/Checkout';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
-import Admin from '../pages/Admin';
 import NotFound from '../pages/NotFound';
 import OrderConfirmation from '../pages/OrderConfirmation';
+import AdminDashboard from '../pages/admin/AdminDashboard';
 import AuthProvider from '../context/AuthProvider';
 import CartProvider from '../context/CartProvider';
 import Layout from '../components/layout/Layout';
+import AdminLayout from '../components/admin/AdminLayout';
 import ProtectedRoute from './ProtectedRoute';
 import AdminRoute from './AdminRoute';
 
@@ -33,7 +34,9 @@ function AppRouter() {
                 <Route path="/orders/:id" element={<OrderConfirmation />} />
               </Route>
               <Route element={<AdminRoute />}>
-                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
             </Route>
