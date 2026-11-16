@@ -1,6 +1,7 @@
 import { formatPrice } from '../../utils/format';
 
 const SIZE_CLASSES = {
+  sm: { current: 'text-base', regular: 'text-sm' },
   md: { current: 'text-xl', regular: 'text-sm' },
   lg: { current: 'text-3xl', regular: 'text-base' },
 };

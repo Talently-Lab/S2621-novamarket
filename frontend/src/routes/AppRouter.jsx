@@ -9,6 +9,7 @@ import Register from '../pages/Register';
 import NotFound from '../pages/NotFound';
 import OrderConfirmation from '../pages/OrderConfirmation';
 import AdminDashboard from '../pages/admin/AdminDashboard';
+import AdminProducts from '../pages/admin/AdminProducts';
 import AuthProvider from '../context/AuthProvider';
 import CartProvider from '../context/CartProvider';
 import Layout from '../components/layout/Layout';
@@ -36,6 +37,7 @@ function AppRouter() {
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
+                  <Route path="products" element={<AdminProducts />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
