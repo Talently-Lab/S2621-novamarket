@@ -8,6 +8,12 @@ async function createOrder(items) {
   return response.data;
 }
 
+// ADMIN recibe todas las órdenes, sin paginación.
+async function getOrders({ signal } = {}) {
+  const response = await api.get('/orders', { signal });
+  return response.data;
+}
+
 async function getOrderById(id, { signal } = {}) {
   const response = await api.get(`/orders/${encodeURIComponent(id)}`, {
     signal,
@@ -15,6 +21,6 @@ async function getOrderById(id, { signal } = {}) {
   return response.data;
 }
 
-const orderService = { createOrder, getOrderById };
+const orderService = { createOrder, getOrders, getOrderById };
 
 export default orderService;
