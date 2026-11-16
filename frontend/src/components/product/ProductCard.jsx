@@ -1,13 +1,67 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Check, ShoppingCart } from 'lucide-react';
+import useCart from '../../hooks/useCart';
 import Badge from '../ui/Badge';
+import Button from '../ui/Button';
 import ProductImage from './ProductImage';
 import ProductPrice from './ProductPrice';
+
+const FEEDBACK_DURATION_MS = 2500;
 
 function ProductCard({ product }) {
   const { id, name, brand, category, regularPrice, salePrice, stock, images } =
     product;
-  const outOfStock = stock === 0;
+  const { items, addItem } = useCart();
+  const [feedback, setFeedback] = useState(null);
+  const outOfStock = stock <= 0;
   const onSale = salePrice !== null && salePrice !== undefined;
+  const inCart = items.find((item) => item.productId === id)?.quantity ?? 0;
+  const maxedOut = !outOfStock && inCart >= stock;
+
+  // La confirmación de "Agregado" se ve unos segundos y vuelve al estado normal.
+  useEffect(() => {
+    if (!feedback) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => setFeedback(null), FEEDBACK_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [feedback]);
+
+  const handleAdd = () => {
+    const added = addItem(product, 1);
+
+    setFeedback({
+      id: Date.now(),
+      added: added > 0,
+      message:
+        added > 0
+          ? `Agregaste ${name} al carrito.`
+          : 'Ya tenés en el carrito todo el stock disponible.',
+    });
+  };
+
+  let buttonContent = (
+    <>
+      <ShoppingCart aria-hidden="true" className="h-5 w-5" />
+      Agregar al carrito
+      <span className="sr-only">: {name}</span>
+    </>
+  );
+
+  if (outOfStock) {
+    buttonContent = 'Sin stock';
+  } else if (feedback?.added) {
+    buttonContent = (
+      <>
+        <Check aria-hidden="true" className="h-5 w-5" />
+        Agregado
+      </>
+    );
+  } else if (maxedOut) {
+    buttonContent = 'Stock máximo en el carrito';
+  }
 
   return (
     <article className="relative flex h-full flex-col overflow-hidden rounded-card border border-border bg-white transition-shadow focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 hover:shadow-md">
@@ -38,8 +92,21 @@ function ProductCard({ product }) {
             {name}
           </Link>
         </h3>
-        <div className="mt-auto pt-2">
+        <div className="mt-auto flex flex-col gap-3 pt-2">
           <ProductPrice regularPrice={regularPrice} salePrice={salePrice} />
+          {/* z-10 deja el botón por encima del enlace que cubre la tarjeta. */}
+          <div className="relative z-10">
+            <Button
+              onClick={handleAdd}
+              disabled={outOfStock || maxedOut}
+              className="w-full px-4"
+            >
+              {buttonContent}
+            </Button>
+            <span role="status" className="sr-only">
+              {feedback?.message}
+            </span>
+          </div>
         </div>
       </div>
     </article>
