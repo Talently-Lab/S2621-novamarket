@@ -21,9 +21,12 @@ import AdminLayout from '../components/admin/AdminLayout';
 import ProtectedRoute from './ProtectedRoute';
 import AdminRoute from './AdminRoute';
 
+// Opta por el comportamiento de React Router v7 (evita las advertencias de "future flags" en consola).
+const ROUTER_FUTURE = { v7_startTransition: true, v7_relativeSplatPath: true };
+
 function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={ROUTER_FUTURE}>
       <AuthProvider>
         <CartProvider>
           <Routes>
