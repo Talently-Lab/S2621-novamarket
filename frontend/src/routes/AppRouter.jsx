@@ -12,6 +12,8 @@ import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminProducts from '../pages/admin/AdminProducts';
 import AdminProductCreate from '../pages/admin/AdminProductCreate';
 import AdminProductEdit from '../pages/admin/AdminProductEdit';
+import AdminOrders from '../pages/admin/AdminOrders';
+import AdminOrderDetail from '../pages/admin/AdminOrderDetail';
 import AuthProvider from '../context/AuthProvider';
 import CartProvider from '../context/CartProvider';
 import Layout from '../components/layout/Layout';
@@ -45,6 +47,8 @@ function AppRouter() {
                     path="products/:id/edit"
                     element={<AdminProductEdit />}
                   />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="orders/:id" element={<AdminOrderDetail />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
