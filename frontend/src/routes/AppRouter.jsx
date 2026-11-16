@@ -10,6 +10,8 @@ import NotFound from '../pages/NotFound';
 import OrderConfirmation from '../pages/OrderConfirmation';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminProducts from '../pages/admin/AdminProducts';
+import AdminProductCreate from '../pages/admin/AdminProductCreate';
+import AdminProductEdit from '../pages/admin/AdminProductEdit';
 import AuthProvider from '../context/AuthProvider';
 import CartProvider from '../context/CartProvider';
 import Layout from '../components/layout/Layout';
@@ -38,6 +40,11 @@ function AppRouter() {
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="products" element={<AdminProducts />} />
+                  <Route path="products/new" element={<AdminProductCreate />} />
+                  <Route
+                    path="products/:id/edit"
+                    element={<AdminProductEdit />}
+                  />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
