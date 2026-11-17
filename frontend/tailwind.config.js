@@ -23,7 +23,6 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', ...defaultTheme.fontFamily.sans],
-        logo: ['"Fredoka One"', ...defaultTheme.fontFamily.sans],
       },
       borderRadius: {
         control: '10px',
