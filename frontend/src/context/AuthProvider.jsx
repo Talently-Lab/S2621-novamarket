@@ -5,7 +5,7 @@ import authService from '../services/authService';
 import useCart from '../hooks/useCart';
 import { TOKEN_STORAGE_KEY, setUnauthorizedHandler } from '../services/api';
 
-// Va dentro de CartProvider: al cerrar la sesión también vacía el carrito.
+// Va dentro de CartProvider: el logout manual también vacía el carrito.
 function AuthProvider({ children }) {
   const { clearCart } = useCart();
   const [user, setUser] = useState(null);
@@ -27,16 +27,12 @@ function AuthProvider({ children }) {
     locationRef.current = location;
   }, [location]);
 
-  // Logout, 401 durante la sesión y token rechazado al recargar pasan por acá. El carrito se guarda en el
-  // navegador: si no se vacía, la próxima cuenta que ingrese en este dispositivo ve los productos de la anterior.
-  // El login no lo toca, así que lo que un invitado agregó antes de ingresar se conserva.
   const clearSession = useCallback(() => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     sessionUserRef.current = null;
     setToken(null);
     setUser(null);
-    clearCart();
-  }, [clearCart]);
+  }, []);
 
   useEffect(() => {
     if (!localStorage.getItem(TOKEN_STORAGE_KEY)) {
@@ -96,10 +92,15 @@ function AuthProvider({ children }) {
     return response.user;
   }, []);
 
+  // Solo el logout manual vacía el carrito: se guarda en el navegador y, si no, la próxima cuenta que ingrese en
+  // este dispositivo vería los productos de la anterior. Un 401 o un token rechazado al recargar limpian la sesión
+  // pero conservan el carrito, para que quien vuelve a ingresar (por ejemplo, en pleno checkout) no lo pierda.
+  // El login tampoco lo toca: se conserva lo que un invitado agregó antes de ingresar.
   const logout = useCallback(() => {
     clearSession();
+    clearCart();
     navigate('/');
-  }, [clearSession, navigate]);
+  }, [clearSession, clearCart, navigate]);
 
   const value = useMemo(
     () => ({

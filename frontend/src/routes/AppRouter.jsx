@@ -27,7 +27,7 @@ const ROUTER_FUTURE = { v7_startTransition: true, v7_relativeSplatPath: true };
 function AppRouter() {
   return (
     <BrowserRouter future={ROUTER_FUTURE}>
-      {/* CartProvider va afuera: AuthProvider vacía el carrito al cerrar la sesión. */}
+      {/* CartProvider va afuera: AuthProvider vacía el carrito en el logout manual. */}
       <CartProvider>
         <AuthProvider>
           <Routes>

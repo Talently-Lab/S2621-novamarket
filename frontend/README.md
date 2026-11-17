@@ -343,7 +343,7 @@ Criterio: un dato va a contexto solo si lo usan varias pantallas no relacionadas
 - **Login:** `login(credentials)` llama a `authService.login`, que responde `{ token, user }`, guarda los dos y devuelve `user`. Los errores llegan ya normalizados por `getApiError` (por ejemplo, `INVALID_CREDENTIALS`). El JWT dura 8 horas y no hay refresh: cuando vence, la primera llamada protegida responde 401 `TOKEN_EXPIRED`, el interceptor limpia la sesión y el usuario vuelve a `/login` con `state` `{ reason: 'session-expired', from }`, donde `from` es la ruta en la que estaba.
 - **Registro:** `register(data)` llama a `authService.register` con `{ name, lastName, email, password }` y devuelve el `user` creado sin iniciar sesión, porque la API responde 201 `{ message, user }` sin token. `Register` redirige después a `/login`.
 - **Logout:** `logout()` borra el token de `localStorage`, limpia el estado, vacía el carrito y navega a `/`.
-- **Carrito al cerrar la sesión:** toda limpieza de sesión (logout, 401 durante la sesión o token rechazado al iniciar la app) llama a `clearCart()`, porque el carrito vive en el navegador y si no la próxima cuenta que ingrese en el mismo dispositivo vería los productos de la anterior. El login no lo vacía: lo que un invitado agregó antes de ingresar se conserva.
+- **Carrito al cerrar la sesión:** solo el logout manual ("Cerrar sesión") llama a `clearCart()`, porque el carrito vive en el navegador y si no la próxima cuenta que ingrese en el mismo dispositivo vería los productos de la anterior. Un 401 durante la sesión o un token rechazado al iniciar la app limpian la sesión pero conservan el carrito, para que quien vuelve a ingresar (por ejemplo, en pleno checkout) no lo pierda. El login no lo vacía: lo que un invitado agregó antes de ingresar se conserva.
 
 #### `CartContext`
 
@@ -353,7 +353,7 @@ Criterio: un dato va a contexto solo si lo usan varias pantallas no relacionadas
 - `addItem` rechaza productos con `stock` 0 y ninguna cantidad puede superar el `stock` del producto ni bajar de 1. Agregar un producto que ya está suma la cantidad y actualiza nombre, imagen, precio y stock con los datos recientes.
 - Se persiste en `localStorage` con la clave `cart`. Al cargar, se descartan los ítems con forma inválida o sin stock y se ajustan las cantidades al stock guardado.
 
-`CartProvider` y `AuthProvider` envuelven las rutas dentro de `BrowserRouter`, porque `AuthProvider` necesita navegar a `/login` cuando se limpia la sesión. `CartProvider` va afuera porque `AuthProvider` usa `useCart` para vaciar el carrito al limpiar la sesión.
+`CartProvider` y `AuthProvider` envuelven las rutas dentro de `BrowserRouter`, porque `AuthProvider` necesita navegar a `/login` cuando se limpia la sesión. `CartProvider` va afuera porque `AuthProvider` usa `useCart` para vaciar el carrito en el logout manual.
 
 #### Estado local
 
@@ -374,7 +374,7 @@ La capa de servicios sigue el **Contrato API v0.3** publicado por Back: endpoint
 
 - **Instancia única:** `services/api.js` (ya existe) crea la instancia con `baseURL: import.meta.env.VITE_API_URL`. En local la API corre en el puerto 3000 (`http://localhost:3000/api`) y Vite en el 5173; Back ya configuró CORS para ese origen.
 - **Token:** un interceptor de request agrega `Authorization: Bearer <token>` cuando hay token guardado en `localStorage` (clave `token`), que es lo que piden los endpoints protegidos. El JWT dura 8 horas y no hay refresh token.
-- **401:** un interceptor de response limpia la sesión (token, `user` y carrito) y redirige a `/login` con `state` `{ reason: 'session-expired', from }` cuando el 401 trae `INVALID_TOKEN` o `TOKEN_EXPIRED`. Para eso `api.js` expone `setUnauthorizedHandler`, donde `AuthProvider` registra la limpieza; así el contexto se actualiza sin recargar la página. Solo redirige si había una sesión activa: el 401 de la revalidación al iniciar la app limpia el token sin sacar al usuario de la página en la que está. El 401 de `POST /api/auth/login` (`INVALID_CREDENTIALS`) no pasa por ahí: no hay sesión que limpiar y el mensaje se muestra en el formulario.
+- **401:** un interceptor de response limpia la sesión (token y `user`; el carrito se conserva) y redirige a `/login` con `state` `{ reason: 'session-expired', from }` cuando el 401 trae `INVALID_TOKEN` o `TOKEN_EXPIRED`. Para eso `api.js` expone `setUnauthorizedHandler`, donde `AuthProvider` registra la limpieza; así el contexto se actualiza sin recargar la página. Solo redirige si había una sesión activa: el 401 de la revalidación al iniciar la app limpia el token sin sacar al usuario de la página en la que está. El 401 de `POST /api/auth/login` (`INVALID_CREDENTIALS`) no pasa por ahí: no hay sesión que limpiar y el mensaje se muestra en el formulario.
 - **Errores:** el mismo interceptor normaliza todos los errores con `getApiError` (en `api.js`) antes de rechazar la promesa, así las vistas siempre reciben `{ status, code, message, fields }`.
 
 La API responde los errores con el formato `{ error: { code, message, fields? } }`. `getApiError` lo traduce así:
