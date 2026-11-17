@@ -1,14 +1,17 @@
 import { Link } from 'react-router-dom';
 import CategoryBanner from '../components/home/CategoryBanner';
 import FeaturedProducts from '../components/home/FeaturedProducts';
+import Offers from '../components/home/Offers';
 import useCategories from '../hooks/useCategories';
 import useProducts from '../hooks/useProducts';
 
 const FEATURED_LIMIT = 4;
+const OFFERS_LIMIT = 4;
 
 function Home() {
   const categories = useCategories();
   const featured = useProducts({ featured: true, limit: FEATURED_LIMIT });
+  const offers = useProducts({ offer: true, limit: OFFERS_LIMIT });
 
   return (
     <div className="flex flex-col gap-12">
@@ -38,6 +41,13 @@ function Home() {
         loading={featured.loading}
         error={featured.error}
         onRetry={featured.refetch}
+      />
+
+      <Offers
+        products={offers.data?.products}
+        loading={offers.loading}
+        error={offers.error}
+        onRetry={offers.refetch}
       />
     </div>
   );
