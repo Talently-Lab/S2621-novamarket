@@ -34,6 +34,23 @@ function Navbar() {
 
   const handleSearch = (term) => {
     closeMenu();
+
+    if (location.pathname === '/products') {
+      // En el catálogo la búsqueda se suma a la categoría elegida y vuelve a la página 1.
+      const next = new URLSearchParams(searchParams);
+
+      if (term) {
+        next.set('search', term);
+      } else {
+        next.delete('search');
+      }
+      next.delete('page');
+
+      const query = next.toString();
+      navigate({ pathname: '/products', search: query ? `?${query}` : '' });
+      return;
+    }
+
     navigate(
       term
         ? {
