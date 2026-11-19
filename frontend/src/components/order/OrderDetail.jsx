@@ -1,10 +1,6 @@
 import { formatDate, formatPrice } from '../../utils/format';
+import { getOrderStatusLabel } from '../../utils/order';
 import Badge from '../ui/Badge';
-
-// Estados del contrato; si llega uno nuevo se muestra tal cual.
-const STATUS_LABELS = {
-  CREATED: 'Creado',
-};
 
 // Muestra la orden tal como la devuelve el Back: precios, subtotales y total son los calculados por la API.
 function OrderDetail({ order }) {
@@ -24,7 +20,7 @@ function OrderDetail({ order }) {
         <div className="flex flex-col items-start gap-1">
           <dt className="text-sm text-muted">Estado</dt>
           <dd>
-            <Badge>{STATUS_LABELS[status] ?? status}</Badge>
+            <Badge>{getOrderStatusLabel(status)}</Badge>
           </dd>
         </div>
       </dl>

@@ -10,6 +10,11 @@ const DATE_FORMAT = new Intl.DateTimeFormat('es-AR', {
   timeStyle: 'short',
 });
 
+const SHORT_DATE_FORMAT = new Intl.DateTimeFormat('es-AR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+});
+
 export function formatPrice(value) {
   return PRICE_FORMAT.format(value);
 }
@@ -20,4 +25,12 @@ export function formatDate(value) {
   return Number.isNaN(date.getTime())
     ? String(value ?? '')
     : DATE_FORMAT.format(date);
+}
+
+// Versión compacta para tablas y listados.
+export function formatShortDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? String(value ?? '')
+    : SHORT_DATE_FORMAT.format(date);
 }
