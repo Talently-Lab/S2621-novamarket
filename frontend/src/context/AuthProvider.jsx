@@ -2,9 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AuthContext from './AuthContext';
 import authService from '../services/authService';
+import useCart from '../hooks/useCart';
 import { TOKEN_STORAGE_KEY, setUnauthorizedHandler } from '../services/api';
 
+// Va dentro de CartProvider: el logout manual también vacía el carrito.
 function AuthProvider({ children }) {
+  const { clearCart } = useCart();
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() =>
     localStorage.getItem(TOKEN_STORAGE_KEY),
@@ -89,10 +92,15 @@ function AuthProvider({ children }) {
     return response.user;
   }, []);
 
+  // Solo el logout manual vacía el carrito: se guarda en el navegador y, si no, la próxima cuenta que ingrese en
+  // este dispositivo vería los productos de la anterior. Un 401 o un token rechazado al recargar limpian la sesión
+  // pero conservan el carrito, para que quien vuelve a ingresar (por ejemplo, en pleno checkout) no lo pierda.
+  // El login tampoco lo toca: se conserva lo que un invitado agregó antes de ingresar.
   const logout = useCallback(() => {
     clearSession();
+    clearCart();
     navigate('/');
-  }, [clearSession, navigate]);
+  }, [clearSession, clearCart, navigate]);
 
   const value = useMemo(
     () => ({

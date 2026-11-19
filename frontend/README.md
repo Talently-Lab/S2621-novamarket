@@ -1,8 +1,22 @@
 # NovaMarket — Frontend
 
-Frontend del MVP de NovaMarket, el canal de venta online propio de una tienda de tecnología que hoy vende por redes sociales y marketplaces. Cubre el recorrido de compra (Home, catálogo con búsqueda y filtro por categoría, detalle de producto, carrito, checkout simulado y confirmación del pedido), el registro y el inicio de sesión. Consume la API del backend (carpeta `/backend` del monorepo), publicada en Render.
+Frontend del MVP de NovaMarket, el canal de venta online propio de una tienda de tecnología que hoy vende por redes sociales y marketplaces. Cubre el recorrido de compra completo (Home, catálogo con búsqueda y filtro por categoría, detalle de producto, carrito, checkout simulado y confirmación del pedido), el registro y el inicio de sesión, y un panel de administración para gestionar productos y ver pedidos.
 
-**Deploy:** https://s2621-novamarket.vercel.app (estado de la integración con la API en [Deploy en Vercel](#deploy-en-vercel)).
+- **Web en producción:** https://s2621-novamarket.vercel.app
+- **Backend:** carpeta [`/backend`](../backend) de este monorepo (API REST con Node, Express y MongoDB).
+
+<img src="docs/screenshots/prod-home-desktop.png" alt="Home de NovaMarket en desktop" width="900">
+
+## Funcionalidades
+
+- **Home:** banner principal, categorías, productos destacados y ofertas.
+- **Catálogo:** grilla de productos con búsqueda desde el `Navbar`, filtro por categoría y paginación; los filtros quedan en la URL.
+- **Detalle de producto:** galería de hasta 5 imágenes, precio (con precio de oferta), stock, descripción, especificaciones y selector de cantidad.
+- **Carrito:** agregar, cambiar cantidades (sin superar el stock) y quitar productos; se guarda en el navegador.
+- **Checkout simulado:** requiere sesión; confirma el pedido contra la API y muestra la confirmación con el número de orden. No hay pasarela de pago real.
+- **Registro e inicio de sesión:** validaciones en el formulario, mensajes de error de la API y sesión que se revalida al recargar.
+- **Panel de administración (`/admin`):** solo para el rol `ADMIN`. Resumen con indicadores (productos activos e inactivos, stock bajo, pedidos y total vendido), listado de productos con filtro, búsqueda y paginación, alta y edición, baja con confirmación y reactivación, y listado y detalle de pedidos.
+- **Responsive y accesible:** diseño mobile-first (375, 768, 1024, 1280 y 1440 px), navegación con teclado y foco visible, estados de carga, error y vacío en todas las pantallas, y mensajes de error pensados para el usuario (sin textos técnicos).
 
 ## Stack
 
@@ -18,57 +32,63 @@ Frontend del MVP de NovaMarket, el canal de venta online propio de una tienda de
 | ESLint           | 10      |
 | Prettier         | 3.9     |
 
-Lenguaje: JavaScript (sin TypeScript). Estado global: Context API.
+Lenguaje: JavaScript (sin TypeScript). Estado global: Context API. Gestor de paquetes: npm.
 
-## Cómo correrlo
+## Cómo correrlo localmente
 
-Requisitos: Node.js 20.19+ y npm.
+### Requisitos
+
+- Node.js 20.19 o superior (el repo trae `.nvmrc`).
+- npm.
+- Una API de NovaMarket disponible: el backend de [`/backend`](../backend) corriendo en local o la API publicada (pedí la URL al equipo de Back).
+
+### Instalación
 
 ```bash
 cd frontend
-cp .env.example .env
 npm install
+cp .env.example .env
+```
+
+Completá los valores del `.env` (o de un `.env.local`, que tiene prioridad) y levantá el dev server:
+
+```bash
 npm run dev
 ```
 
-La app queda disponible en `http://localhost:5173`.
+La app queda en `http://localhost:5173`. Usá ese puerto (el que trae Vite por defecto): es el origen que la API acepta por CORS en desarrollo.
 
-`.env.example` apunta al backend local (`http://localhost:3000/api`). Para usar la API publicada en Render, poné `VITE_API_URL=https://novamarket-api-8u61.onrender.com/api` en el `.env` o en un `.env.local`, que tiene prioridad sobre `.env`. Render acepta pedidos desde `http://localhost:5173`, así que el dev server tiene que correr en ese puerto (el que usa Vite por defecto).
+### Variables de entorno
 
-Otros scripts:
+| Variable          | Obligatoria | Descripción                                                                                                           |
+| ----------------- | ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| `VITE_API_URL`    | Sí          | URL base de la API, terminada en `/api`.                                                                              |
+| `VITE_ASSETS_URL` | No          | Host de las imágenes con ruta relativa (`/uploads/...`). Si no se define, se usa `VITE_API_URL` sin el sufijo `/api`. |
 
-- `npm run build`: genera el build de producción en `dist/`.
-- `npm run preview`: sirve el build localmente.
-- `npm run lint`: corre ESLint.
-- `npm run format`: formatea el código con Prettier.
-- `npm run format:check`: verifica el formato sin modificar archivos (lo corren el pre-push y CI).
+Vite reemplaza estas variables al compilar: si cambia una, hace falta un build nuevo. `.env` y `.env.local` no se versionan (están en `.gitignore`); el repo solo tiene `.env.example`.
 
-## Variables de entorno
+### Scripts
 
-| Variable          | Descripción                                                                                               | Local                       | Deploy (Vercel)                                               |
-| ----------------- | --------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------- |
-| `VITE_API_URL`    | URL base de la API                                                                                        | `http://localhost:3000/api` | `/api` (Production y Preview), servido por el proxy de Vercel |
-| `VITE_ASSETS_URL` | Opcional. Host de las imágenes con ruta relativa (`/uploads`). Por defecto, `VITE_API_URL` sin el `/api`. | `http://localhost:3000`     | Sin definir: las relativas van a `/uploads` del mismo host    |
+| Comando                | Qué hace                                                              |
+| ---------------------- | --------------------------------------------------------------------- |
+| `npm run dev`          | Dev server con recarga en caliente.                                   |
+| `npm run build`        | Build de producción en `dist/`.                                       |
+| `npm run preview`      | Sirve el build de `dist/` en local.                                   |
+| `npm run lint`         | ESLint sobre todo el proyecto.                                        |
+| `npm run format`       | Formatea el código con Prettier.                                      |
+| `npm run format:check` | Verifica el formato sin modificar archivos (lo corren pre-push y CI). |
 
-Vite reemplaza estas variables al compilar: si cambia una en Vercel, hace falta un deploy nuevo. `.env` y `.env.local` no se versionan (están en `.gitignore`); el repo solo tiene `.env.example`.
+Antes de cada push, el hook de husky corre `format:check`, `lint` y `build`; CI repite los tres en Node 20 y 22.
 
-## Deploy en Vercel
+## Deploy
 
-| Dato                | Valor                                                                            |
-| ------------------- | -------------------------------------------------------------------------------- |
-| URL de producción   | https://s2621-novamarket.vercel.app                                              |
-| Proyecto en Vercel  | `s2621-novamarket`                                                               |
-| Carpeta del deploy  | `frontend/`                                                                      |
-| Framework           | Vite (fijado en `vercel.json`)                                                   |
-| Build y salida      | `npm run build` → `dist/`                                                        |
-| Variables del build | `VITE_API_URL` = `/api` en Production y Preview; la URL de Render en Development |
+La web está publicada en Vercel desde la carpeta `frontend/` (proyecto `s2621-novamarket`, framework Vite, build `npm run build` y salida `dist/`).
 
-- `vercel.json` hace de proxy de la API: `/api/:path*` y `/uploads/:path*` se reescriben a `https://novamarket-api-8u61.onrender.com/api/:path*` y `/uploads/:path*`. El navegador solo habla con `s2621-novamarket.vercel.app` y Vercel reenvía el pedido a Render del lado del servidor, así que no hay pedidos entre orígenes y CORS no aplica. Render solo permite el origen `http://localhost:5173`; sin el proxy, el navegador bloqueaba cada pedido del deploy. El header `Authorization` viaja igual que en local.
-- Con `VITE_API_URL=/api`, axios pide rutas relativas (`/api/products`) y `getImageUrl` arma `/uploads/...` porque quita el sufijo `/api` y queda vacío. Las URL absolutas de Cloudinary no pasan por el proxy: el navegador las pide directo. En local no cambia nada: el `.env.local` sigue con la URL completa de Render (o `http://localhost:3000/api`), sin proxy.
-- Los rewrites del proxy van antes del catch-all: Vercel aplica el primero que coincide.
-- `vercel.json` reescribe cualquier otra ruta a `index.html`, así los enlaces directos (`/products/:id`, `/orders/:id`, `/checkout`) no dan 404 al abrirlos o recargarlos. Vercel sirve primero los archivos que existen (`/assets/*`, `/favicon.svg`) y el resto lo resuelve React Router; una ruta desconocida muestra `NotFound`.
+- `vercel.json` hace de proxy de la API: `/api/:path*` y `/uploads/:path*` se reenvían al backend del lado del servidor, así que el navegador solo habla con el dominio de la web y no hay pedidos entre orígenes (sin CORS). En Production y Preview, `VITE_API_URL` vale `/api`.
+- Las imágenes con URL absoluta (Cloudinary) no pasan por el proxy: el navegador las pide directo.
+- Los rewrites del proxy van antes del catch-all, que manda cualquier otra ruta a `index.html`: así los enlaces directos (`/products/:id`, `/checkout`, `/admin`) no dan 404 al abrirlos o recargarlos, y una ruta desconocida muestra `NotFound`.
 - `.vercelignore` evita subir `node_modules`, `dist` y los `.env` locales: el build usa las variables cargadas en el proyecto de Vercel.
-- El proyecto de Vercel no está conectado al repo de GitHub: se deploya con la CLI desde `frontend/` (hace falta acceso al proyecto en Vercel):
+- El proyecto de Vercel no está conectado al repo: se deploya con la CLI desde `frontend/` (hace falta acceso al proyecto):
 
 ```bash
 npx vercel login
@@ -76,39 +96,64 @@ npx vercel link --project s2621-novamarket
 npx vercel deploy --prod
 ```
 
-Estado de la integración con la API de Render al 30/10/2026:
+Estado de la integración con la API al 17/11/2026:
 
-| Qué                                                      | Estado                                                                                                                                                                                                      |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CORS                                                     | Resuelto con el proxy de `vercel.json`: el deploy pide la API en su propio dominio. Verificado en producción: Home con categorías, destacados y ofertas, filtro por categoría y login, sin errores de CORS. |
-| `GET /api/categories` y `GET /api/products`              | Desplegados. Categorías de la Home, filtro por categoría, búsqueda, destacados y ofertas probados desde `localhost:5173`. Los productos todavía no tienen imágenes (`images: []`): se ve el placeholder.    |
-| `POST /api/auth/register`, `/login` y `GET /api/auth/me` | Desplegados: responden con las validaciones del contrato (400 sin datos, 401 sin token).                                                                                                                    |
-| `GET /api/products/:id`                                  | Responde 404: el detalle muestra el error genérico con "Reintentar".                                                                                                                                        |
-| `POST /api/orders` y `GET /api/orders/:id`               | Responden 404: el checkout no puede crear el pedido y la confirmación no carga.                                                                                                                             |
+| Qué                                                      | Estado                                                                                                                |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| CORS                                                     | Resuelto con el proxy de `vercel.json`. Sin errores de CORS en la pestaña Network.                                    |
+| `GET /api/categories`, `/api/products` y `/products/:id` | Desplegados. Home, catálogo, filtro por categoría, búsqueda, detalle con galería y carrito verificados en producción. |
+| `POST /api/auth/register`, `/login` y `GET /api/auth/me` | Desplegados: responden con las validaciones del contrato (401 sin token).                                             |
+| `POST /api/orders` y `GET /api/orders/:id`               | Desplegados: piden sesión (401 sin token). El checkout completo se prueba a mano con una cuenta de cliente.           |
+
+## Calidad y compatibilidad
+
+Auditoría del 17/11/2026 sobre producción, sin sesión y sin crear datos, con Playwright en Chromium, Firefox y WebKit, a 375, 768, 1024, 1280 y 1440 px. Recorrido: Home, catálogo, filtro por categoría, búsqueda, detalle y galería, agregar al carrito, carrito (cambiar cantidad y quitar), entrada al checkout (redirige a `/login`), login, registro, 404 y `/admin` (redirige a `/login`).
+
+- Sin errores ni advertencias en la consola, sin pedidos fallidos y sin errores de CORS.
+- Sin scroll horizontal ni elementos fuera de pantalla en ningún ancho.
+- Sin textos técnicos en pantalla: los errores de la API se muestran con el mensaje del contrato o con un mensaje genérico.
+- Navegación con teclado: se puede comprar con Tab y Enter (agregar al carrito, cambiar cantidades, ir al checkout) y todos los elementos con foco muestran el anillo de foco.
+- WebKit/Safari: por defecto, Tab salta los enlaces y solo recorre botones y campos; con Option + Tab (o activando "Resaltar cada elemento con Tab" en Safari) se recorren todos. Es una preferencia del navegador, no de la app.
+
+WebKit de Playwright es el motor de Safari, pero no reemplaza una prueba en Safari real (iPhone o Mac).
 
 ## Capturas
 
-Tomadas el 30/10/2026 con el dev server contra la API de Render, en 1440 × 900 (desktop) y 375 × 812 (mobile).
+Tomadas el 17/11/2026 en producción, en 1440 × 900 (desktop) y 375 × 812 (mobile).
 
-| Pantalla | Desktop                                                                                | Mobile                                                                               |
-| -------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Home     | <img src="docs/screenshots/home-desktop.png" alt="Home en desktop" width="560">        | <img src="docs/screenshots/home-mobile.png" alt="Home en mobile" width="180">        |
-| Catálogo | <img src="docs/screenshots/catalog-desktop.png" alt="Catálogo en desktop" width="560"> | <img src="docs/screenshots/catalog-mobile.png" alt="Catálogo en mobile" width="180"> |
-| Detalle  | Pendiente: `GET /api/products/:id` todavía no está desplegado en Render.               | Pendiente.                                                                           |
-| Carrito  | <img src="docs/screenshots/cart-desktop.png" alt="Carrito en desktop" width="560">     | <img src="docs/screenshots/cart-mobile.png" alt="Carrito en mobile" width="180">     |
-| Checkout | Pendiente: la captura requiere una sesión de cliente.                                  | Pendiente.                                                                           |
+| Pantalla | Desktop                                                                                     | Mobile                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Home     | <img src="docs/screenshots/prod-home-desktop.png" alt="Home en desktop" width="560">        | <img src="docs/screenshots/prod-home-mobile.png" alt="Home en mobile" width="180">        |
+| Catálogo | <img src="docs/screenshots/prod-catalog-desktop.png" alt="Catálogo en desktop" width="560"> | <img src="docs/screenshots/prod-catalog-mobile.png" alt="Catálogo en mobile" width="180"> |
+| Detalle  | <img src="docs/screenshots/prod-detail-desktop.png" alt="Detalle en desktop" width="560">   | <img src="docs/screenshots/prod-detail-mobile.png" alt="Detalle en mobile" width="180">   |
+| Carrito  | <img src="docs/screenshots/prod-cart-desktop.png" alt="Carrito en desktop" width="560">     | <img src="docs/screenshots/prod-cart-mobile.png" alt="Carrito en mobile" width="180">     |
+| Checkout | Pendiente: la captura requiere una sesión de cliente.                                       | Pendiente.                                                                                |
 
 ## Estructura de carpetas
 
 ```
-src/
-├── assets/      # Imágenes, íconos y archivos estáticos
-├── components/  # Componentes reutilizables de UI
-├── context/     # Contextos globales (Context API)
-├── hooks/       # Custom hooks
-├── pages/       # Una vista por ruta (Home, Products, Cart, etc.)
-├── routes/      # Definición de rutas (AppRouter)
-└── services/    # Cliente HTTP (Axios) y llamadas a la API
+frontend/
+├── docs/screenshots/  # Capturas del README
+├── public/            # Archivos estáticos servidos tal cual (favicon)
+├── src/
+│   ├── assets/        # Logo e imágenes importadas desde el código
+│   ├── components/    # Componentes reutilizables, por dominio
+│   │   ├── admin/     # Layout, tablas, formulario y tarjetas del panel
+│   │   ├── cart/      # Ítem y resumen del carrito
+│   │   ├── home/      # Banner de categorías, destacados y ofertas
+│   │   ├── layout/    # Layout, Navbar, menú de categorías, logo y footer
+│   │   ├── order/     # Detalle de una orden
+│   │   ├── product/   # Tarjeta, grilla, galería, precio, filtros y buscador
+│   │   └── ui/        # Botones, campos, loader, mensajes, paginación, diálogos
+│   ├── context/       # Contextos de sesión y carrito (Context API)
+│   ├── hooks/         # useAuth, useCart y hooks de datos
+│   ├── pages/         # Una vista por ruta; las del panel en pages/admin/
+│   ├── routes/        # AppRouter y guards (ProtectedRoute, AdminRoute)
+│   ├── services/      # Instancia de Axios y un servicio por recurso de la API
+│   └── utils/         # Funciones puras (formato de precios y fechas, órdenes, formulario)
+├── .env.example       # Variables de entorno (sin valores reales)
+├── vercel.json        # Proxy de la API y rewrite de la SPA
+└── vite.config.js
 ```
 
 ## Arquitectura de componentes
@@ -297,7 +342,8 @@ Criterio: un dato va a contexto solo si lo usan varias pantallas no relacionadas
 - **Al iniciar la app:** si hay token, llama a `GET /api/auth/me`. Si responde OK carga `user`; si responde 401 (`INVALID_TOKEN` o `TOKEN_EXPIRED`) limpia la sesión sin redirigir: quien estaba en una página pública sigue ahí, y si la ruta exige sesión el guard lo manda a `/login`. Si falla por otro motivo (API caída o sin conexión), conserva el token pero queda sin `user` hasta la próxima recarga. Siempre termina con `loading` en `false`.
 - **Login:** `login(credentials)` llama a `authService.login`, que responde `{ token, user }`, guarda los dos y devuelve `user`. Los errores llegan ya normalizados por `getApiError` (por ejemplo, `INVALID_CREDENTIALS`). El JWT dura 8 horas y no hay refresh: cuando vence, la primera llamada protegida responde 401 `TOKEN_EXPIRED`, el interceptor limpia la sesión y el usuario vuelve a `/login` con `state` `{ reason: 'session-expired', from }`, donde `from` es la ruta en la que estaba.
 - **Registro:** `register(data)` llama a `authService.register` con `{ name, lastName, email, password }` y devuelve el `user` creado sin iniciar sesión, porque la API responde 201 `{ message, user }` sin token. `Register` redirige después a `/login`.
-- **Logout:** `logout()` borra el token de `localStorage`, limpia el estado y navega a `/`.
+- **Logout:** `logout()` borra el token de `localStorage`, limpia el estado, vacía el carrito y navega a `/`.
+- **Carrito al cerrar la sesión:** solo el logout manual ("Cerrar sesión") llama a `clearCart()`, porque el carrito vive en el navegador y si no la próxima cuenta que ingrese en el mismo dispositivo vería los productos de la anterior. Un 401 durante la sesión o un token rechazado al iniciar la app limpian la sesión pero conservan el carrito, para que quien vuelve a ingresar (por ejemplo, en pleno checkout) no lo pierda. El login no lo vacía: lo que un invitado agregó antes de ingresar se conserva.
 
 #### `CartContext`
 
@@ -307,7 +353,7 @@ Criterio: un dato va a contexto solo si lo usan varias pantallas no relacionadas
 - `addItem` rechaza productos con `stock` 0 y ninguna cantidad puede superar el `stock` del producto ni bajar de 1. Agregar un producto que ya está suma la cantidad y actualiza nombre, imagen, precio y stock con los datos recientes.
 - Se persiste en `localStorage` con la clave `cart`. Al cargar, se descartan los ítems con forma inválida o sin stock y se ajustan las cantidades al stock guardado.
 
-`AuthProvider` y `CartProvider` envuelven las rutas dentro de `BrowserRouter`, porque `AuthProvider` necesita navegar a `/login` cuando se limpia la sesión.
+`CartProvider` y `AuthProvider` envuelven las rutas dentro de `BrowserRouter`, porque `AuthProvider` necesita navegar a `/login` cuando se limpia la sesión. `CartProvider` va afuera porque `AuthProvider` usa `useCart` para vaciar el carrito en el logout manual.
 
 #### Estado local
 
@@ -328,7 +374,7 @@ La capa de servicios sigue el **Contrato API v0.3** publicado por Back: endpoint
 
 - **Instancia única:** `services/api.js` (ya existe) crea la instancia con `baseURL: import.meta.env.VITE_API_URL`. En local la API corre en el puerto 3000 (`http://localhost:3000/api`) y Vite en el 5173; Back ya configuró CORS para ese origen.
 - **Token:** un interceptor de request agrega `Authorization: Bearer <token>` cuando hay token guardado en `localStorage` (clave `token`), que es lo que piden los endpoints protegidos. El JWT dura 8 horas y no hay refresh token.
-- **401:** un interceptor de response limpia la sesión (token y `user`) y redirige a `/login` con `state` `{ reason: 'session-expired', from }` cuando el 401 trae `INVALID_TOKEN` o `TOKEN_EXPIRED`. Para eso `api.js` expone `setUnauthorizedHandler`, donde `AuthProvider` registra la limpieza; así el contexto se actualiza sin recargar la página. Solo redirige si había una sesión activa: el 401 de la revalidación al iniciar la app limpia el token sin sacar al usuario de la página en la que está. El 401 de `POST /api/auth/login` (`INVALID_CREDENTIALS`) no pasa por ahí: no hay sesión que limpiar y el mensaje se muestra en el formulario.
+- **401:** un interceptor de response limpia la sesión (token y `user`; el carrito se conserva) y redirige a `/login` con `state` `{ reason: 'session-expired', from }` cuando el 401 trae `INVALID_TOKEN` o `TOKEN_EXPIRED`. Para eso `api.js` expone `setUnauthorizedHandler`, donde `AuthProvider` registra la limpieza; así el contexto se actualiza sin recargar la página. Solo redirige si había una sesión activa: el 401 de la revalidación al iniciar la app limpia el token sin sacar al usuario de la página en la que está. El 401 de `POST /api/auth/login` (`INVALID_CREDENTIALS`) no pasa por ahí: no hay sesión que limpiar y el mensaje se muestra en el formulario.
 - **Errores:** el mismo interceptor normaliza todos los errores con `getApiError` (en `api.js`) antes de rechazar la promesa, así las vistas siempre reciben `{ status, code, message, fields }`.
 
 La API responde los errores con el formato `{ error: { code, message, fields? } }`. `getApiError` lo traduce así:
@@ -422,7 +468,8 @@ Los puntos abiertos con Back quedaron resueltos en el Contrato API v0.3 (§31) y
 
 #### Con Back (deploy en Render)
 
-- Desplegar `GET /api/products/:id`, `POST /api/orders` y `GET /api/orders/:id`, que hoy responden 404. Con el detalle desplegado se suma su captura al README.
+- `GET /api/products/:id`, `POST /api/orders` y `GET /api/orders/:id` ya están desplegados (verificado el 17/11/2026) y el detalle tiene su captura.
+- `GET /api/products` responde 401 `INVALID_TOKEN` si el pedido lleva un token inválido o vencido, aunque es un endpoint público (`GET /api/categories` y `GET /api/products/:id` lo ignoran). Quien vuelve con una sesión vencida ve el error una vez en el catálogo y en la Home; "Reintentar" funciona porque el 401 ya limpió la sesión. Propuesta para Back: en los endpoints públicos, ignorar un token inválido en lugar de rechazar el pedido.
 
 #### Con UX
 
@@ -457,3 +504,4 @@ Wireframes pendientes:
 | 30/10/2026 | Proxy de la API en Vercel: `vercel.json` reescribe `/api/:path*` y `/uploads/:path*` a Render antes del rewrite a `index.html`, y `VITE_API_URL` pasa a `/api` en Production y Preview. Development y el `.env.local` siguen con la URL completa de Render.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Render solo permite el origen `http://localhost:5173` y el navegador bloqueaba por CORS cada pedido del deploy. Con el proxy, el front pide la API en su propio dominio y Vercel reenvía del lado del servidor, sin esperar un cambio de configuración en Back.                                                                                                                                                                                                            | —                                                               |
 | 02/11/2026 | `images` puede traer URL absolutas de Cloudinary (hasta 5; `images[0]` sigue siendo la principal) o rutas relativas de productos anteriores (`/uploads/...`). `getImageUrl` ya devolvía sin cambios las URL absolutas y `ProductImage` ya mostraba el placeholder sin imagen o si falla la carga, así que el render no cambia. El rewrite de `/uploads` en `vercel.json` se mantiene para los productos anteriores. `OrderDetail` sigue sin mostrar imágenes: los ítems de la orden no traen `image` en el contrato.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Back decidió guardar las imágenes de producto en Cloudinary. Los productos anteriores pueden seguir con rutas relativas, así que los dos formatos tienen que funcionar.                                                                                                                                                                                                                                                                                                    | —                                                               |
 | 16/11/2026 | Panel de administración bajo `/admin` (Resumen, Productos y Pedidos) con `AdminLayout`. Productos: listado con filtro, búsqueda y paginación, alta y edición con `ProductForm` (JSON, imágenes por URL, especificaciones clave-valor), baja con diálogo de confirmación accesible y reactivación por `PUT`. Pedidos: listado de todas las órdenes y detalle con `OrderDetail`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | El MVP pide CRUD de productos y visualización básica de órdenes, y el video de la entrega muestra el Dashboard de Admin. El Back no tiene endpoint de estadísticas ni subida de imágenes y `GET /api/products/:id` no devuelve inactivos: las métricas se calculan en Front, las imágenes son URL y la edición se carga desde el listado.                                                                                                                                  | —                                                               |
+| 17/11/2026 | Cierre para la entrega. `Navbar`: entre 1024 y 1439 px "Cerrar sesión" queda solo con el ícono (el texto sigue para lectores de pantalla y como tooltip), entre 1024 y 1279 px el saludo se oculta visualmente, el saludo usa el primer nombre (truncado si es muy largo), los ítems no se parten en dos líneas (`whitespace-nowrap`) y el espacio entre ítems baja a 16 px hasta 1280 px. `ProductDetail`: el botón "Agregar al carrito" baja a su propia fila cuando la columna es angosta. README reorganizado para la entrega (funcionalidades, cómo correrlo, variables sin valores, calidad y compatibilidad, capturas de producción).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | En 1024–1280 px, con sesión iniciada, `Hola, <nombre>` y "Cerrar sesión" se partían en dos líneas y el buscador quedaba en 66 px; en 768 px el texto del botón del detalle se partía. Auditoría con Playwright en Chromium, Firefox y WebKit a 375, 768, 1024, 1280 y 1440 px. **A validar con UX** el `Navbar` compacto.                                                                                                                                                  | —                                                               |

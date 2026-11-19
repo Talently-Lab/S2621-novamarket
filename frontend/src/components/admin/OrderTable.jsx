@@ -9,7 +9,7 @@ import {
 } from '../../utils/order';
 
 const DETAIL_LINK_CLASSES =
-  'focus-ring inline-flex h-12 items-center justify-center rounded-control border border-control-border bg-white px-4 font-semibold text-ink transition-colors hover:bg-canvas';
+  'focus-ring inline-flex h-12 items-center justify-center whitespace-nowrap rounded-control border border-control-border bg-white px-4 font-semibold text-ink transition-colors hover:bg-canvas';
 
 function unitsLabel(order) {
   const units = countOrderUnits(order);

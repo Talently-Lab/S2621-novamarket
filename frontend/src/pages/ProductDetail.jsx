@@ -79,7 +79,8 @@ function ProductView({ product }) {
               : `En stock: ${product.stock} ${product.stock === 1 ? 'disponible' : 'disponibles'}`}
           </p>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          {/* Si la columna es angosta (tablet), el botón baja a su propia fila en lugar de partir el texto. */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
             <QuantitySelector
               value={selectedQuantity}
               min={1}
@@ -90,7 +91,7 @@ function ProductView({ product }) {
             <Button
               onClick={handleAdd}
               disabled={available === 0}
-              className="sm:flex-1"
+              className="whitespace-nowrap sm:flex-1"
             >
               <ShoppingCart aria-hidden="true" className="h-5 w-5" />
               Agregar al carrito

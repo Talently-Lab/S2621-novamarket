@@ -27,8 +27,9 @@ const ROUTER_FUTURE = { v7_startTransition: true, v7_relativeSplatPath: true };
 function AppRouter() {
   return (
     <BrowserRouter future={ROUTER_FUTURE}>
-      <AuthProvider>
-        <CartProvider>
+      {/* CartProvider va afuera: AuthProvider vacía el carrito en el logout manual. */}
+      <CartProvider>
+        <AuthProvider>
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
@@ -57,8 +58,8 @@ function AppRouter() {
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
-        </CartProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </CartProvider>
     </BrowserRouter>
   );
 }
