@@ -1,0 +1,17 @@
+{
+  "name": "novamarket",
+  "private": true,
+  "version": "0.0.0",
+  "description": "NovaMarket — E-commerce MVP · Grupo S2621 · Talently Lab",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm --prefix frontend run lint",
+    "build": "npm --prefix frontend run build",
+    "format": "npm --prefix frontend run format",
+    "format:check": "npm --prefix frontend run format:check"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2"
+  }
+}
