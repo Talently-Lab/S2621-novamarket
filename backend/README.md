@@ -1,217 +1,136 @@
-# NovaMarket Backend
+# NovaMarket — Backend
 
-API REST del proyecto **NovaMarket — E-commerce MVP**, desarrollada por el equipo Backend del grupo **S2621 de Talently Lab**.
+API REST del MVP de comercio electrónico **NovaMarket**, desarrollada por el equipo Backend del grupo **S2621 — Talently Lab**.
 
-Este directorio contiene la implementación del Backend de NovaMarket, encargado de gestionar la lógica de negocio, persistencia de datos, autenticación, productos, categorías y órdenes del sistema.
-
-> **Estado:** En desarrollo.
-
----
+> **Corte de documentación:** 20/11/2026. Basado en el código integrado en `develop` revisado para la entrega. La existencia de una funcionalidad en el código no implica que se haya completado una prueba integral de extremo a extremo.
 
 ## Tecnologías
 
-El Backend utiliza actualmente:
+- Node.js (requisito documentado: 20.19+), JavaScript con módulos ES.
+- Express 5, MongoDB y Mongoose 9.
+- `bcrypt` para hash y verificación de contraseñas.
+- `jsonwebtoken` para autenticación JWT.
+- `helmet` para encabezados HTTP de seguridad.
+- `cors` para controlar orígenes permitidos.
+- `dotenv` para variables de entorno y `nodemon` para desarrollo.
 
-- **Node.js** 20.19+
-- **Express**
-- **MongoDB**
-- **Mongoose**
-- **dotenv**
-- **CORS**
-- **Nodemon**
-- **Postman** para pruebas de endpoints
+Las versiones exactas de dependencias están en `package.json` y `package-lock.json`.
 
-Tecnologías previstas para autenticación:
+## Funcionalidades implementadas
 
-- **bcrypt** para hash de contraseñas.
-- **JWT** para autenticación mediante tokens.
+- Registro, inicio de sesión y consulta del usuario autenticado.
+- Roles `CLIENT` y `ADMIN`, con autenticación y autorización en rutas protegidas.
+- Catálogo de productos, búsqueda, filtros, paginación y detalle.
+- Listado de categorías activas.
+- Administración de productos: alta, actualización y baja lógica (solo `ADMIN`).
+- Creación y consulta de pedidos, con acceso restringido según rol y propietario.
+- Validación de disponibilidad al crear pedidos.
+- Servicio independiente de descuento atómico de stock.
+- Endpoint de estado del servidor (`health`).
 
----
+### Alcance y limitaciones conocidas
 
-## Arquitectura general
+- **El descuento de stock todavía no está conectado al flujo de creación de pedidos** en el código revisado: `orders.controller.js` valida disponibilidad y crea la orden, pero no invoca `decrementStock`. El servicio `stock.service.js` existe y efectúa un decremento atómico condicionado a disponibilidad.
+- La respuesta actual de pedidos incluye productos, importes, estado y fecha; **no incluye los datos del cliente en el objeto de respuesta**. Esta mejora debe verificarse nuevamente cuando se integre el trabajo correspondiente.
+- `GET /api/products` utiliza autenticación opcional: sin token permite el acceso público, pero con un token malformado, inválido o vencido puede responder `401`. Es un comportamiento conocido a considerar en pruebas de integración.
+- La mejora de validación de registro, limitación de intentos y refuerzo de JWT se encuentra en el **PR #34**, que estaba abierto en la revisión previa a la entrega; no se presenta aquí como integrada.
+- No se identificó una suite automatizada de pruebas en los scripts de `package.json`; las comprobaciones funcionales documentadas no equivalen a cobertura automatizada.
 
-NovaMarket utiliza una arquitectura de API REST basada en JSON.
-
-Durante el entorno de desarrollo:
+## Arquitectura
 
 ```text
-Frontend
-http://localhost:5173
-        |
-        | HTTP / JSON
-        v
-Backend API
-http://localhost:3000
-        |
-        | Mongoose
-        v
+Frontend (React / Vite)
+       |
+       | HTTP / JSON
+       v
+Express API (/api)
+       |
+       +-- routes -> middlewares -> controllers
+       |                          |
+       |                          +-- models (Mongoose)
+       |                          +-- services
+       v
 MongoDB
 ```
 
-El Frontend consume los recursos expuestos por el Backend a través del prefijo:
+### Estructura del código
 
 ```text
-/api
+backend/
+├── src/
+│   ├── app.js                   # Express, Helmet, CORS y rutas
+│   ├── server.js                # Carga de entorno, conexión DB y servidor
+│   ├── config/db.js             # Conexión MongoDB
+│   ├── controllers/
+│   │   ├── auth.controller.js
+│   │   ├── categories.controller.js
+│   │   ├── orders.controller.js
+│   │   └── products.controller.js
+│   ├── middlewares/
+│   │   ├── auth.middleware.js
+│   │   ├── optionalAuth.middleware.js
+│   │   └── roles.middleware.js
+│   ├── models/
+│   │   ├── Category.js
+│   │   ├── Order.js
+│   │   ├── Product.js
+│   │   └── User.js
+│   ├── routes/
+│   │   ├── auth.routes.js
+│   │   ├── categories.routes.js
+│   │   ├── orders.routes.js
+│   │   └── products.routes.js
+│   ├── services/stock.service.js
+│   └── utils/
+│       ├── apiError.js
+│       └── password.js
+├── .env.example
+├── package.json
+└── package-lock.json
 ```
 
----
+## Instalación local
 
-## Requisitos
-
-Para ejecutar el Backend localmente se necesita:
-
-- Node.js 20.19 o superior.
-- npm.
-- Acceso a una instancia de MongoDB.
-- Variables de entorno configuradas.
-
-Para comprobar la versión instalada de Node.js:
-
-```bash
-node -v
-```
-
-Para comprobar npm:
-
-```bash
-npm -v
-```
-
----
-
-## Instalación
-
-Clonar el repositorio y posicionarse dentro de la carpeta del Backend:
+Desde la raíz del repositorio:
 
 ```bash
 cd backend
+npm ci
 ```
 
-Instalar las dependencias:
+Crear `backend/.env` tomando como referencia `backend/.env.example`:
 
-```bash
-npm install
-```
-
----
-
-## Variables de entorno
-
-Crear un archivo:
-
-```text
-backend/.env
-```
-
-tomando como referencia:
-
-```text
-backend/.env.example
-```
-
-Variables utilizadas o previstas actualmente:
-
-```env
+```dotenv
 PORT=3000
-MONGODB_URI=
-JWT_SECRET=
+MONGODB_URI=<cadena_de_conexion_mongodb>
+JWT_SECRET=<secreto_largo_y_aleatorio>
 JWT_EXPIRES_IN=8h
+CORS_ORIGIN=http://localhost:5173
 ```
 
-### Importante
+No subir `.env` al repositorio ni compartir secretos o cadenas de conexión.
 
-El archivo `.env` puede contener información sensible y **no debe versionarse ni subirse al repositorio**.
-
-La configuración real de MongoDB debe almacenarse únicamente en:
-
-```env
-MONGODB_URI=
-```
-
-No incluir usuarios, contraseñas ni cadenas de conexión reales en el README.
-
----
-
-## Base de datos
-
-NovaMarket utiliza **MongoDB** como base de datos.
-
-Actualmente se configuró **MongoDB Atlas** para disponer de una instancia de desarrollo accesible por el equipo.
-
-La aplicación no está acoplada directamente a Atlas. La conexión se obtiene mediante:
-
-```env
-MONGODB_URI=
-```
-
-Por lo tanto, es posible utilizar otra instancia compatible de MongoDB modificando la variable de entorno sin alterar la lógica de conexión de la aplicación.
-
-La conexión se encuentra centralizada en:
-
-```text
-src/config/db.js
-```
-
-y utiliza **Mongoose** para establecer la comunicación entre Node.js y MongoDB.
-
-### Colecciones previstas para el MVP
-
-Según el contrato actual del Backend:
-
-```text
-users
-categories
-products
-orders
-```
-
-No se utiliza una colección de carrito. El carrito será administrado por el Frontend y será validado nuevamente por el Backend al crear una orden.
-
----
-
-## Ejecutar el Backend
-
-### Desarrollo
+Iniciar en desarrollo:
 
 ```bash
 npm run dev
 ```
 
-Este comando utiliza Nodemon para reiniciar automáticamente el servidor cuando se detectan modificaciones.
-
-### Ejecución normal
+O iniciar sin recarga automática:
 
 ```bash
 npm start
 ```
 
-Por defecto, la API utiliza:
+El servidor conecta primero a MongoDB y luego escucha en el puerto configurado (por defecto `3000`).
 
-```text
-http://localhost:3000
-```
-
-Si existe una variable `PORT`, el Backend utilizará el puerto configurado en ella.
-
----
-
-## Health Check
-
-Existe un endpoint técnico para verificar que la API se encuentra funcionando.
-
-### Request
+### Comprobación de salud
 
 ```http
-GET /api/health
+GET http://localhost:3000/api/health
 ```
 
-### URL local
-
-```text
-http://localhost:3000/api/health
-```
-
-### Respuesta esperada
+Respuesta esperada (`200`):
 
 ```json
 {
@@ -220,396 +139,112 @@ http://localhost:3000/api/health
 }
 ```
 
----
+> El endpoint `health` comprueba que Express responde; por sí solo no constituye una prueba completa de las operaciones de base de datos.
 
-## Estructura actual del Backend
+## Endpoints
 
-```text
-backend/
-│
-├── src/
-│   ├── config/
-│   │   └── db.js
-│   │
-│   ├── controllers/
-│   │   └── auth.controller.js
-│   │
-│   ├── middlewares/
-│   │
-│   ├── models/
-│   │   └── User.js
-│   │
-│   ├── routes/
-│   │   └── auth.routes.js
-│   │
-│   ├── app.js
-│   └── server.js
-│
-├── .env
-├── .env.example
-├── package.json
-├── package-lock.json
-└── README.md
-```
+Prefijo general: `/api`. Los endpoints protegidos requieren `Authorization: Bearer <token>`.
 
-### Responsabilidad de cada directorio
+| Método | Endpoint | Acceso | Descripción |
+|---|---|---|---|
+| `GET` | `/api/health` | Público | Estado de la API |
+| `POST` | `/api/auth/register` | Público | Registrar usuario |
+| `POST` | `/api/auth/login` | Público | Iniciar sesión y recibir JWT |
+| `GET` | `/api/auth/me` | Autenticado | Consultar usuario actual |
+| `GET` | `/api/categories` | Público | Listar categorías activas |
+| `GET` | `/api/products` | Público / ADMIN para inactivos | Catálogo con filtros |
+| `GET` | `/api/products/:id` | Público | Detalle de producto |
+| `POST` | `/api/products` | ADMIN | Crear producto |
+| `PUT` | `/api/products/:id` | ADMIN | Actualizar producto completo |
+| `DELETE` | `/api/products/:id` | ADMIN | Dar de baja un producto (baja lógica) |
+| `POST` | `/api/orders` | CLIENT | Crear pedido |
+| `GET` | `/api/orders` | CLIENT / ADMIN | CLIENT: propios; ADMIN: todos |
+| `GET` | `/api/orders/:id` | CLIENT / ADMIN | CLIENT: propio; ADMIN: cualquiera |
 
-- `config/`: configuración del Backend y conexión con servicios externos, actualmente MongoDB.
-- `controllers/`: lógica asociada a los endpoints.
-- `middlewares/`: middlewares de autenticación, autorización y manejo de errores.
-- `models/`: esquemas y modelos de Mongoose.
-- `routes/`: definición de rutas HTTP.
-- `app.js`: configuración principal de Express.
-- `server.js`: conexión con MongoDB e inicio del servidor.
+### Registro y autenticación
 
----
-
-# Autenticación
-
-La autenticación se desarrolla progresivamente durante el Sprint 2.
-
-Los roles definidos para el MVP son:
-
-```text
-CLIENT
-ADMIN
-```
-
-Un usuario registrado públicamente debe recibir automáticamente el rol:
-
-```text
-CLIENT
-```
-
-El rol no debe ser enviado ni definido por el cliente durante el registro.
-
----
-
-## Modelo User
-
-El modelo actual se encuentra en:
-
-```text
-src/models/User.js
-```
-
-Campos definidos:
-
-```text
-name
-lastName
-email
-passwordHash
-role
-createdAt
-updatedAt
-```
-
-### Reglas principales
-
-- `name` es obligatorio.
-- `lastName` es obligatorio.
-- `email` es obligatorio.
-- `email` debe ser único.
-- Los emails se almacenan en minúsculas.
-- `passwordHash` es obligatorio.
-- Las contraseñas no deben almacenarse en texto plano.
-- `role` admite `CLIENT` o `ADMIN`.
-- El rol por defecto es `CLIENT`.
-- Mongoose administra automáticamente `createdAt` y `updatedAt`.
-
----
-
-# Registro de usuario
-
-## Endpoint
+Ejemplo de registro:
 
 ```http
 POST /api/auth/register
+Content-Type: application/json
 ```
-
-URL local:
-
-```text
-http://localhost:3000/api/auth/register
-```
-
-El endpoint es público y no requiere autenticación.
-
-### Request
 
 ```json
 {
   "name": "Juan",
-  "lastName": "Perez",
+  "lastName": "Pérez",
   "email": "juan@example.com",
-  "password": "password123"
+  "password": "ClaveSegura123"
 }
 ```
 
-El campo `role` no debe enviarse durante el registro.
+Las contraseñas se almacenan como `passwordHash` mediante `bcrypt`, no en texto plano. El registro público crea usuarios con rol `CLIENT` por defecto. El login entrega un JWT que contiene el identificador y rol del usuario, con duración configurable mediante `JWT_EXPIRES_IN` (valor por defecto: `8h`).
 
----
+### Catálogo
 
-## Política de contraseña
+`GET /api/products` admite `page`, `limit`, `search`, `category`, `featured`, `offer` y `active`. La paginación usa por defecto página `1` y límite `12`, con máximo de `50` resultados por página.
 
-Según el contrato actual del Backend, la contraseña debe:
+- Por defecto se consultan productos activos.
+- `active=false` y `active=all` requieren rol `ADMIN`.
+- La actualización `PUT` requiere los datos completos del producto; no es un `PATCH` parcial.
+- `DELETE` realiza una baja lógica (`active=false`), no elimina físicamente el documento.
+- Las imágenes se almacenan como referencias de URL en el producto; no se documenta un endpoint de carga de archivos en este Backend.
 
-- Tener un mínimo de 8 caracteres.
-- Contener al menos una letra.
-- Contener al menos un número.
+### Pedidos
 
-La implementación del hash y las validaciones asociadas se integrarán con la tarea correspondiente de autenticación.
-
----
-
-## Respuesta esperada del registro
-
-Cuando la implementación del registro esté completa, una creación correcta deberá responder:
+Ejemplo de creación:
 
 ```http
-201 Created
+POST /api/orders
+Authorization: Bearer <token_de_cliente>
+Content-Type: application/json
 ```
-
-con:
 
 ```json
 {
-  "message": "Usuario registrado correctamente",
-  "user": {
-    "id": "USER_ID",
-    "name": "Juan",
-    "lastName": "Perez",
-    "email": "juan@example.com",
-    "role": "CLIENT"
-  }
+  "items": [
+    { "productId": "<id_de_producto>", "quantity": 2 }
+  ]
 }
 ```
 
-La respuesta nunca debe incluir:
+El servidor verifica IDs, cantidades enteras positivas, ausencia de productos duplicados, existencia, estado activo y stock disponible. Obtiene el precio vigente desde la base de datos y calcula subtotales y total; no confía en importes enviados por el cliente. La orden se crea con estado `CREATED` y queda asociada al usuario autenticado.
 
-```text
-password
-passwordHash
-```
+**Importante:** en la versión revisada, la creación de la orden no ejecuta el descuento de stock. `decrementStock(productId, quantity, session?)` es un servicio disponible para su integración posterior.
 
----
+## Seguridad y manejo de errores
 
-## Estado actual de BACK-001-S2
-
-Tarjeta:
-
-```text
-BACK-001-S2 | Modelo usuario y endpoint de registro
-```
-
-Actualmente se encuentran implementados:
-
-- Base inicial de Express.
-- Conexión con MongoDB mediante Mongoose.
-- Configuración mediante variables de entorno.
-- Modelo `User`.
-- Ruta `POST /api/auth/register`.
-- Controller de registro.
-- Lectura del body JSON.
-- Validación inicial de campos obligatorios.
-- Búsqueda de usuario existente por email.
-- Respuesta `400 VALIDATION_ERROR`.
-- Respuesta `409 EMAIL_ALREADY_EXISTS`.
-- Rol `CLIENT` por defecto en el modelo.
-- Prueba inicial del endpoint mediante Postman.
-
-### Pendiente de integración
-
-La creación efectiva del usuario se encuentra pendiente de integrar el hash de contraseña.
-
-El flujo esperado será:
-
-```text
-password
-   |
-   v
-bcrypt
-   |
-   v
-passwordHash
-   |
-   v
-User.create()
-   |
-   v
-MongoDB
-```
-
-Esta funcionalidad se relaciona con:
-
-```text
-BACK-002-S2 | Hash de contraseña y manejo de errores
-```
-
-No se debe almacenar temporalmente `password` como `passwordHash` ni persistir contraseñas en texto plano.
-
----
-
-# Pruebas con Postman
-
-Actualmente se verificó la conexión del endpoint de registro mediante Postman.
-
-### Request utilizado
-
-```http
-POST http://localhost:3000/api/auth/register
-```
-
-Body:
-
-```json
-{}
-```
-
-### Resultado esperado y verificado
-
-```http
-400 Bad Request
-```
+- `helmet()` aplica encabezados HTTP de seguridad.
+- CORS utiliza `CORS_ORIGIN` (por defecto `http://localhost:5173`).
+- Las rutas privadas verifican JWT; las operaciones administrativas requieren `ADMIN`.
+- Los errores siguen una estructura JSON común:
 
 ```json
 {
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Todos los campos son obligatorios"
-  }
-}
-```
-
-Esta prueba confirma el flujo:
-
-```text
-Postman
-   |
-   v
-Express
-   |
-   v
-auth.routes.js
-   |
-   v
-auth.controller.js
-```
-
-La prueba de creación efectiva de usuarios se realizará una vez integrada la generación de `passwordHash`.
-
----
-
-# Formato de errores
-
-El contrato del Backend define el siguiente formato general:
-
-```json
-{
-  "error": {
-    "code": "ERROR_CODE",
     "message": "Descripción del error",
     "fields": {}
   }
 }
 ```
 
-El campo `fields` es opcional y puede utilizarse especialmente para errores de validación.
+`fields` es opcional. Entre los códigos utilizados se encuentran `VALIDATION_ERROR` (400), `INVALID_CREDENTIALS` (401), `INVALID_TOKEN` (401), `TOKEN_EXPIRED` (401), `FORBIDDEN` (403), `PRODUCT_NOT_FOUND` (404), `ORDER_NOT_FOUND` (404), `EMAIL_ALREADY_EXISTS` (409) e `INSUFFICIENT_STOCK` (409).
 
-Códigos inicialmente definidos:
+## Verificación manual sugerida antes de la entrega
 
-| Código | HTTP |
-|---|---:|
-| `VALIDATION_ERROR` | 400 |
-| `INVALID_CREDENTIALS` | 401 |
-| `INVALID_TOKEN` | 401 |
-| `TOKEN_EXPIRED` | 401 |
-| `FORBIDDEN` | 403 |
-| `PRODUCT_NOT_FOUND` | 404 |
-| `ORDER_NOT_FOUND` | 404 |
-| `EMAIL_ALREADY_EXISTS` | 409 |
-| `INSUFFICIENT_STOCK` | 409 |
+1. Iniciar la API y comprobar `GET /api/health`.
+2. Consultar categorías y catálogo sin autenticación.
+3. Registrar un usuario de prueba, iniciar sesión y consultar `/api/auth/me.
+4. Comprobar que un CLIENT no pueda administrar productos.
+5. Crear una orden de prueba con un CLIENT y consultar sus pedidos.
+6. Comprobar que un CLIENT no pueda consultar pedidos ajenos y que ADMIN tenga acceso autorizado.
+7. Verificar el comportamiento ante stock insuficiente y token inválido.
+8. Verificar el despliegue web y la comunicación Frontend–Backend.
 
----
+No ejecutar escrituras sobre datos de producción durante la presentación sin coordinación con el equipo.
 
-# CORS
+## Estado de entrega
 
-Durante desarrollo, el Backend permite solicitudes provenientes del Frontend local:
-
-```text
-http://localhost:5173
-```
-
-Headers permitidos:
-
-```text
-Content-Type
-Authorization
-```
-
-Métodos configurados:
-
-```text
-GET
-POST
-PUT
-DELETE
-```
-
----
-
-# Endpoints del MVP
-
-El contrato actual contempla los siguientes grupos principales:
-
-```text
-/api/auth
-/api/categories
-/api/products
-/api/orders
-```
-
-Su implementación se realizará progresivamente según las tarjetas asignadas al equipo Backend.
-
----
-
-# Seguridad
-
-Reglas generales definidas para el Backend:
-
-- Las contraseñas nunca deben almacenarse en texto plano.
-- Las credenciales y secretos deben almacenarse en variables de entorno.
-- `.env` no debe versionarse.
-- Los usuarios registrados públicamente reciben rol `CLIENT`.
-- Los endpoints protegidos utilizarán JWT.
-- La duración prevista del JWT es de 8 horas.
-- No se utilizará refresh token en el MVP.
-- Un token inválido o expirado debe producir `401`.
-- Un usuario autenticado sin permisos suficientes debe recibir `403`.
-
----
-
-# Integración con Frontend
-
-Durante desarrollo:
-
-```text
-Frontend: http://localhost:5173
-Backend:  http://localhost:3000
-API Base: http://localhost:3000/api
-```
-
-El Frontend debe consumir la API utilizando `/api` como prefijo de los endpoints.
-
----
-
-# Estado del proyecto
-
-NovaMarket se encuentra actualmente en desarrollo.
-
-La implementación del Backend se realiza progresivamente de acuerdo con las tareas asignadas en cada Sprint.
-
-Las funcionalidades documentadas como **pendientes** representan decisiones acordadas para el MVP, pero no deben interpretarse como funcionalidades ya implementadas.
-
-La documentación deberá actualizarse a medida que se integren nuevas funcionalidades, endpoints y reglas de negocio.
+Esta documentación describe el código Backend revisado en `develop` para el MVP. Antes de cerrar el release, confirmar los PR abiertos y actualizar esta sección si se integran cambios en pedidos, stock, autenticación o datos del cliente.
